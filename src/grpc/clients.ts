@@ -1,4 +1,4 @@
-import { ClientMiddleware, createChannel, createClientFactory } from 'nice-grpc';
+import { ChannelOptions, ClientMiddleware, createChannel, createClientFactory } from 'nice-grpc';
 import { AdminServiceClient, AdminServiceDefinition } from './generated/zitadel/admin';
 import { AuthServiceClient, AuthServiceDefinition } from './generated/zitadel/auth';
 import { ManagementServiceClient, ManagementServiceDefinition } from './generated/zitadel/management';
@@ -9,12 +9,13 @@ import { ManagementServiceClient, ManagementServiceDefinition } from './generate
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite Dictionary of grpc headers you want to modify or add.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the [Admin API](https://docs.zitadel.com/docs/apis/proto/admin) of ZITADEL.
  */
-export function createAdminClient(apiEndpoint: string, ...interceptors: ClientMiddleware[]): AdminServiceClient {
-  const channel = createChannel(apiEndpoint);
+export function createAdminClient(apiEndpoint: string, grpcHeadersOverwrite?: Partial<ChannelOptions>, ...interceptors: ClientMiddleware[]): AdminServiceClient {
+  const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
   let factory = createClientFactory();
   for (const interceptor of interceptors) {
     factory = factory.use(interceptor);
@@ -28,12 +29,13 @@ export function createAdminClient(apiEndpoint: string, ...interceptors: ClientMi
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite Dictionary of grpc headers you want to modify or add.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the [Auth API](https://docs.zitadel.com/docs/apis/proto/auth) of ZITADEL.
  */
-export function createAuthClient(apiEndpoint: string, ...interceptors: ClientMiddleware[]): AuthServiceClient {
-  const channel = createChannel(apiEndpoint);
+export function createAuthClient(apiEndpoint: string, grpcHeadersOverwrite?: Partial<ChannelOptions>, ...interceptors: ClientMiddleware[]): AuthServiceClient {
+  const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
   let factory = createClientFactory();
   for (const interceptor of interceptors) {
     factory = factory.use(interceptor);
@@ -47,12 +49,13 @@ export function createAuthClient(apiEndpoint: string, ...interceptors: ClientMid
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite Dictionary of grpc headers you want to modify or add.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the [Management API](https://docs.zitadel.com/docs/apis/proto/management) of ZITADEL.
  */
-export function createManagementClient(apiEndpoint: string, ...interceptors: ClientMiddleware[]): ManagementServiceClient {
-  const channel = createChannel(apiEndpoint);
+export function createManagementClient(apiEndpoint: string, grpcHeadersOverwrite?: Partial<ChannelOptions>, ...interceptors: ClientMiddleware[]): ManagementServiceClient {
+  const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
   let factory = createClientFactory();
   for (const interceptor of interceptors) {
     factory = factory.use(interceptor);

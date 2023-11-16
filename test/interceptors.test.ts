@@ -42,7 +42,7 @@ test('access token interceptor - ignore if call already has auth header', async 
 });
 
 test('access token interceptor - allow client to fetch a profile', async (t) => {
-  const client = createAuthClient(apiEndpoint, createAccessTokenInterceptor(personalAccessToken));
+  const client = createAuthClient(apiEndpoint, {}, createAccessTokenInterceptor(personalAccessToken));
   const response = await client.getMyUser({});
   t.truthy(response);
   t.is(response.user?.userName, 'Zitadel Lib');
@@ -88,7 +88,7 @@ test('service account interceptor - ignore if call already has auth header', asy
 
 test('service account interceptor - allow client to fetch a profile', async (t) => {
   const sa = ServiceAccount.fromJson(serviceAccountJson);
-  const client = createAuthClient(apiEndpoint, createServiceAccountInterceptor(apiEndpoint, sa, { apiAccess: true }));
+  const client = createAuthClient(apiEndpoint, {}, createServiceAccountInterceptor(apiEndpoint, sa, { apiAccess: true }));
   const response = await client.getMyUser({});
   t.truthy(response);
   t.is(response.user?.userName, 'Zitadel Lib');

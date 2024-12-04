@@ -1,4 +1,7 @@
-import { Metadata } from 'nice-grpc-common';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createServiceAccountInterceptor = exports.createAccessTokenInterceptor = void 0;
+const nice_grpc_common_1 = require("nice-grpc-common");
 /**
  * Create a simple gRPC `Interceptor` that attaches a given access token to any request
  * a client sends. The token is attached with the `Bearer` auth-scheme.
@@ -16,13 +19,14 @@ import { Metadata } from 'nice-grpc-common';
  *
  * @returns A gRPC client middleware (interceptor) that attaches the given token to each request, if no other authorization header is present.
  */
-export const createAccessTokenInterceptor = (token) => async function* (call, options) {
-    options.metadata ??= new Metadata();
+const createAccessTokenInterceptor = (token) => async function* (call, options) {
+    options.metadata ??= new nice_grpc_common_1.Metadata();
     if (!options.metadata.has('authorization')) {
         options.metadata.set('authorization', `Bearer ${token}`);
     }
     return yield* call.next(call.request, options);
 };
+exports.createAccessTokenInterceptor = createAccessTokenInterceptor;
 /**
  * Create a gRPC `Interceptor` that authenticates the service client calls
  * with the given service account.
@@ -63,11 +67,11 @@ export const createAccessTokenInterceptor = (token) => async function* (call, op
  * await client.getMyUser({});
  * ```
  */
-export const createServiceAccountInterceptor = (audience, serviceAccount, authOptions) => {
+const createServiceAccountInterceptor = (audience, serviceAccount, authOptions) => {
     let token;
     let expiryDate = new Date(0);
     return async function* (call, options) {
-        options.metadata ??= new Metadata();
+        options.metadata ??= new nice_grpc_common_1.Metadata();
         if (!options.metadata.has('authorization')) {
             if (expiryDate < new Date()) {
                 token = await serviceAccount.authenticate(audience, authOptions);
@@ -78,3 +82,4 @@ export const createServiceAccountInterceptor = (audience, serviceAccount, authOp
         return yield* call.next(call.request, options);
     };
 };
+exports.createServiceAccountInterceptor = createServiceAccountInterceptor;

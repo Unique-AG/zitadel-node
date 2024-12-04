@@ -1,13 +1,24 @@
-import { createChannel, createClientFactory } from 'nice-grpc';
-import { AdminServiceDefinition } from './generated/zitadel/admin.js';
-import { AuthServiceDefinition } from './generated/zitadel/auth.js';
-import { ManagementServiceDefinition } from './generated/zitadel/management.js';
-import { OIDCServiceDefinition } from './generated/zitadel/oidc/v2beta/oidc_service.js';
-import { OrganizationServiceDefinition } from './generated/zitadel/org/v2beta/org_service.js';
-import { SessionServiceDefinition } from './generated/zitadel/session/v2beta/session_service.js';
-import { SettingsServiceDefinition } from './generated/zitadel/settings/v2beta/settings_service.js';
-import { SystemServiceDefinition } from './generated/zitadel/system.js';
-import { UserServiceDefinition } from './generated/zitadel/user/v2beta/user_service.js';
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.createAdminClient = createAdminClient;
+exports.createAuthClient = createAuthClient;
+exports.createManagementClient = createManagementClient;
+exports.createOidcClient = createOidcClient;
+exports.createOrganizationClient = createOrganizationClient;
+exports.createSessionClient = createSessionClient;
+exports.createSettingsClient = createSettingsClient;
+exports.createSystemClient = createSystemClient;
+exports.createUserClient = createUserClient;
+const nice_grpc_1 = require("nice-grpc");
+const admin_js_1 = require("./generated/zitadel/admin.js");
+const auth_js_1 = require("./generated/zitadel/auth.js");
+const management_js_1 = require("./generated/zitadel/management.js");
+const oidc_service_js_1 = require("./generated/zitadel/oidc/v2beta/oidc_service.js");
+const org_service_js_1 = require("./generated/zitadel/org/v2beta/org_service.js");
+const session_service_js_1 = require("./generated/zitadel/session/v2beta/session_service.js");
+const settings_service_js_1 = require("./generated/zitadel/settings/v2beta/settings_service.js");
+const system_js_1 = require("./generated/zitadel/system.js");
+const user_service_js_1 = require("./generated/zitadel/user/v2beta/user_service.js");
 /**
  * Create a new gRPC service client for the Admin API of ZITADEL.
  * The client can be configured with multiple client interceptors. For authentication interceptors,
@@ -18,13 +29,13 @@ import { UserServiceDefinition } from './generated/zitadel/user/v2beta/user_serv
  *
  * @returns A new gRPC service client for the Admin API of ZITADEL.
  */
-export function createAdminClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createAdminClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(AdminServiceDefinition, channel);
+    return factory.create(admin_js_1.AdminServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the Auth API of ZITADEL.
@@ -36,13 +47,13 @@ export function createAdminClient(apiEndpoint, grpcHeadersOverwrite, ...intercep
  *
  * @returns A new gRPC service client for the Auth API of ZITADEL.
  */
-export function createAuthClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createAuthClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(AuthServiceDefinition, channel);
+    return factory.create(auth_js_1.AuthServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the Management API of ZITADEL.
@@ -54,13 +65,13 @@ export function createAuthClient(apiEndpoint, grpcHeadersOverwrite, ...intercept
  *
  * @returns A new gRPC service client for the Management API of ZITADEL.
  */
-export function createManagementClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createManagementClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(ManagementServiceDefinition, channel);
+    return factory.create(management_js_1.ManagementServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the OIDC API of ZITADEL.
@@ -72,13 +83,13 @@ export function createManagementClient(apiEndpoint, grpcHeadersOverwrite, ...int
  *
  * @returns A new gRPC service client for the OIDC API of ZITADEL.
  */
-export function createOidcClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createOidcClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(OIDCServiceDefinition, channel);
+    return factory.create(oidc_service_js_1.OIDCServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the organization API of ZITADEL.
@@ -90,13 +101,13 @@ export function createOidcClient(apiEndpoint, grpcHeadersOverwrite, ...intercept
  *
  * @returns A new gRPC service client for the organization API of ZITADEL.
  */
-export function createOrganizationClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createOrganizationClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(OrganizationServiceDefinition, channel);
+    return factory.create(org_service_js_1.OrganizationServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the session API of ZITADEL.
@@ -108,13 +119,13 @@ export function createOrganizationClient(apiEndpoint, grpcHeadersOverwrite, ...i
  *
  * @returns A new gRPC service client for the session API of ZITADEL.
  */
-export function createSessionClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createSessionClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(SessionServiceDefinition, channel);
+    return factory.create(session_service_js_1.SessionServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the settings API of ZITADEL.
@@ -126,13 +137,13 @@ export function createSessionClient(apiEndpoint, grpcHeadersOverwrite, ...interc
  *
  * @returns A new gRPC service client for the settings API of ZITADEL.
  */
-export function createSettingsClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createSettingsClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(SettingsServiceDefinition, channel);
+    return factory.create(settings_service_js_1.SettingsServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the system API of ZITADEL.
@@ -144,13 +155,13 @@ export function createSettingsClient(apiEndpoint, grpcHeadersOverwrite, ...inter
  *
  * @returns A new gRPC service client for the system API of ZITADEL.
  */
-export function createSystemClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createSystemClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(SystemServiceDefinition, channel);
+    return factory.create(system_js_1.SystemServiceDefinition, channel);
 }
 /**
  * Create a new gRPC service client for the user API of ZITADEL.
@@ -162,11 +173,11 @@ export function createSystemClient(apiEndpoint, grpcHeadersOverwrite, ...interce
  *
  * @returns A new gRPC service client for the user API of ZITADEL.
  */
-export function createUserClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
-    const channel = createChannel(apiEndpoint, undefined, grpcHeadersOverwrite);
-    let factory = createClientFactory();
+function createUserClient(apiEndpoint, grpcHeadersOverwrite, ...interceptors) {
+    const channel = (0, nice_grpc_1.createChannel)(apiEndpoint, undefined, grpcHeadersOverwrite);
+    let factory = (0, nice_grpc_1.createClientFactory)();
     for (const interceptor of interceptors) {
         factory = factory.use(interceptor);
     }
-    return factory.create(UserServiceDefinition, channel);
+    return factory.create(user_service_js_1.UserServiceDefinition, channel);
 }

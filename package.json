@@ -2,7 +2,9 @@
   "name": "@zitadel/node",
   "version": "0.0.0-development",
   "description": "Library for API access to ZITADEL. Provides compiled gRPC service clients and helpers for applications and service accounts.",
-  "type": "module",
+  "type": "commonjs",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "publishConfig": {
     "access": "public"
   },

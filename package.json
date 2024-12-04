@@ -48,6 +48,7 @@
     "typescript": "5.7.2"
   },
   "dependencies": {
+    "@bufbuild/protobuf": "^2.2.2",
     "axios": "1.7.8",
     "jose": "5.9.6",
     "long": "5.2.3",

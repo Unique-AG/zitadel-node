@@ -1,5 +1,11 @@
-import { importPKCS8, SignJWT } from 'jose';
-import NodeRSA from 'node-rsa';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.Application = void 0;
+const jose_1 = require("jose");
+const node_rsa_1 = __importDefault(require("node-rsa"));
 /**
  * Application for [ZITADEL](https://zitadel.ch/). An application is an OIDC application type
  * that allows a backend (for example an API for some single page application) to
@@ -15,7 +21,7 @@ import NodeRSA from 'node-rsa';
  * - Create an API application
  * - Create a "key" inside the application to create and download the JWT profile
  */
-export class Application {
+class Application {
     appId;
     clientId;
     keyId;
@@ -104,9 +110,9 @@ export class Application {
      * @returns A signed JWT.
      */
     async getSignedJwt(audience) {
-        const rsa = new NodeRSA(this.key);
-        const key = await importPKCS8(rsa.exportKey('pkcs8-private-pem'), 'RSA256');
-        return await new SignJWT({})
+        const rsa = new node_rsa_1.default(this.key);
+        const key = await (0, jose_1.importPKCS8)(rsa.exportKey('pkcs8-private-pem'), 'RSA256');
+        return await new jose_1.SignJWT({})
             .setProtectedHeader({ kid: this.keyId, alg: 'RS256' })
             .setIssuedAt()
             .setExpirationTime('1h')
@@ -116,3 +122,4 @@ export class Application {
             .sign(key);
     }
 }
+exports.Application = Application;

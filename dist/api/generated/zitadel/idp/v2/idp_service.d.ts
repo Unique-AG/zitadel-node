@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { IDP } from "./idp.js";
 export declare const protobufPackage = "zitadel.idp.v2";
 export interface GetIDPByIDRequest {

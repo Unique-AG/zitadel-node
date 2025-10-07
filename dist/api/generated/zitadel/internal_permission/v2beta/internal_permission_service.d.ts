@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { PaginationRequest, PaginationResponse } from "../../filter/v2beta/filter.js";
 import { Administrator, AdministratorFieldName, AdministratorSearchFilter } from "./query.js";
 export declare const protobufPackage = "zitadel.internal_permission.v2beta";

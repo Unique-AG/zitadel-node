@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Duration } from "../google/protobuf/duration.js";
 import { KeyType } from "./auth_n_key.js";
 import { InstanceFeature } from "./feature.js";

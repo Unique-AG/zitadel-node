@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { ECDSA, ED25519, RSA, WebKey } from "./key.js";
 export declare const protobufPackage = "zitadel.webkey.v2";
 export interface CreateWebKeyRequest {

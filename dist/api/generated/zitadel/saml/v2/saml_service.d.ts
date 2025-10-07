@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Details } from "../../object/v2/object.js";
 import { AuthorizationError, SAMLRequest } from "./authorization.js";
 export declare const protobufPackage = "zitadel.saml.v2";

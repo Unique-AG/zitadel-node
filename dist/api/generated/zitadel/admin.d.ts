@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Duration } from "../google/protobuf/duration.js";
 import { AggregateType, Event, EventType } from "./event.js";
 import { AzureADTenant, IDP, IDPFieldName, IDPIDQuery, IDPLoginPolicyLink, IDPNameQuery, IDPStylingType, IDPUserLink, LDAPAttributes, OIDCMappingField, Options, Provider, SAMLBinding, SAMLNameIDFormat, SAMLSignatureAlgorithm } from "./idp.js";

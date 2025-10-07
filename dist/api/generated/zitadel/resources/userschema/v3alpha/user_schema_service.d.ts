@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Instance } from "../../../object/v3alpha/object.js";
 import { Details, ListDetails, SearchQuery } from "../../object/v3alpha/object.js";
 import { FieldName, GetUserSchema, PatchUserSchema, SearchFilter, UserSchema } from "./user_schema.js";

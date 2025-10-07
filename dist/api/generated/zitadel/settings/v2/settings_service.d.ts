@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Details, ListDetails, RequestContext } from "../../object/v2/object.js";
 import { BrandingSettings } from "./branding_settings.js";
 import { DomainSettings } from "./domain_settings.js";

@@ -1,5 +1,5 @@
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { GetInstanceFeaturesRequest, GetInstanceFeaturesResponse, ResetInstanceFeaturesRequest, ResetInstanceFeaturesResponse, SetInstanceFeaturesRequest, SetInstanceFeaturesResponse } from "./instance.js";
 import { GetOrganizationFeaturesRequest, GetOrganizationFeaturesResponse, ResetOrganizationFeaturesRequest, ResetOrganizationFeaturesResponse, SetOrganizationFeaturesRequest, SetOrganizationFeaturesResponse } from "./organization.js";
 import { GetSystemFeaturesRequest, GetSystemFeaturesResponse, ResetSystemFeaturesRequest, ResetSystemFeaturesResponse, SetSystemFeaturesRequest, SetSystemFeaturesResponse } from "./system.js";

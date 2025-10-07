@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Duration } from "../google/protobuf/duration.js";
 import { Action, ActionFieldName, ActionIDQuery, ActionNameQuery, ActionStateQuery, Flow, FlowType, TriggerType } from "./action.js";
 import { APIAuthMethodType, App, AppQuery, LoginVersion, OIDCAppType, OIDCAuthMethodType, OIDCGrantType, OIDCResponseType, OIDCTokenType, OIDCVersion } from "./app.js";

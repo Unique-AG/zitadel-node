@@ -27,7 +27,7 @@ export declare enum Edition {
     EDITION_2024 = 1001,
     /**
      * EDITION_1_TEST_ONLY - Placeholder editions for testing feature resolution.  These should not be
-     * used or relyed on outside of tests.
+     * used or relied on outside of tests.
      */
     EDITION_1_TEST_ONLY = 1,
     EDITION_2_TEST_ONLY = 2,
@@ -44,6 +44,21 @@ export declare enum Edition {
 }
 export declare function editionFromJSON(object: any): Edition;
 export declare function editionToJSON(object: Edition): string;
+/**
+ * Describes the 'visibility' of a symbol with respect to the proto import
+ * system. Symbols can only be imported when the visibility rules do not prevent
+ * it (ex: local symbols cannot be imported).  Visibility modifiers can only set
+ * on `message` and `enum` as they are the only types available to be referenced
+ * from other files.
+ */
+export declare enum SymbolVisibility {
+    VISIBILITY_UNSET = 0,
+    VISIBILITY_LOCAL = 1,
+    VISIBILITY_EXPORT = 2,
+    UNRECOGNIZED = -1
+}
+export declare function symbolVisibilityFromJSON(object: any): SymbolVisibility;
+export declare function symbolVisibilityToJSON(object: SymbolVisibility): string;
 /**
  * The protocol compiler can output a FileDescriptorSet containing the .proto
  * files it parses.
@@ -66,6 +81,11 @@ export interface FileDescriptorProto {
      * For Google-internal migration only. Do not use.
      */
     weakDependency: number[];
+    /**
+     * Names of files imported by this file purely for the purpose of providing
+     * option extensions. These are excluded from the dependency list above.
+     */
+    optionDependency: string[];
     /** All top-level definitions in this file. */
     messageType: DescriptorProto[];
     enumType: EnumDescriptorProto[];
@@ -84,9 +104,17 @@ export interface FileDescriptorProto {
      * The supported values are "proto2", "proto3", and "editions".
      *
      * If `edition` is present, this value must be "editions".
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
      */
     syntax?: string | undefined;
-    /** The edition of the proto file. */
+    /**
+     * The edition of the proto file.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     edition?: Edition | undefined;
 }
 /** Describes a message type. */
@@ -105,6 +133,8 @@ export interface DescriptorProto {
      * A given name may only be reserved once.
      */
     reservedName: string[];
+    /** Support for `export` and `local` keywords on enums. */
+    visibility?: SymbolVisibility | undefined;
 }
 export interface DescriptorProto_ExtensionRange {
     /** Inclusive. */
@@ -326,6 +356,8 @@ export interface EnumDescriptorProto {
      * be reserved once.
      */
     reservedName: string[];
+    /** Support for `export` and `local` keywords on enums. */
+    visibility?: SymbolVisibility | undefined;
 }
 /**
  * Range of reserved numeric values. Reserved values may not be used by
@@ -485,7 +517,12 @@ export interface FileOptions {
      * determining the ruby package.
      */
     rubyPackage?: string | undefined;
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /**
      * The parser stores options it doesn't recognize here.
@@ -579,19 +616,25 @@ export interface MessageOptions {
      * @deprecated
      */
     deprecatedLegacyJsonFieldConflicts?: boolean | undefined;
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /** The parser stores options it doesn't recognize here. See above. */
     uninterpretedOption: UninterpretedOption[];
 }
 export interface FieldOptions {
     /**
+     * NOTE: ctype is deprecated. Use `features.(pb.cpp).string_type` instead.
      * The ctype option instructs the C++ code generator to use a different
      * representation of the field than it normally would.  See the specific
      * options below.  This option is only implemented to support use of
      * [ctype=CORD] and [ctype=STRING] (the default) on non-repeated fields of
-     * type "bytes" in the open source release -- sorry, we'll try to include
-     * other types in a future version!
+     * type "bytes" in the open source release.
+     * TODO: make ctype actually deprecated.
      */
     ctype?: FieldOptions_CType | undefined;
     /**
@@ -666,7 +709,12 @@ export interface FieldOptions {
     retention?: FieldOptions_OptionRetention | undefined;
     targets: FieldOptions_OptionTargetType[];
     editionDefaults: FieldOptions_EditionDefault[];
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     featureSupport?: FieldOptions_FeatureSupport | undefined;
     /** The parser stores options it doesn't recognize here. See above. */
@@ -700,11 +748,7 @@ export declare enum FieldOptions_JSType {
 }
 export declare function fieldOptions_JSTypeFromJSON(object: any): FieldOptions_JSType;
 export declare function fieldOptions_JSTypeToJSON(object: FieldOptions_JSType): string;
-/**
- * If set to RETENTION_SOURCE, the option will be omitted from the binary.
- * Note: as of January 2023, support for this is in progress and does not yet
- * have an effect (b/264593489).
- */
+/** If set to RETENTION_SOURCE, the option will be omitted from the binary. */
 export declare enum FieldOptions_OptionRetention {
     RETENTION_UNKNOWN = 0,
     RETENTION_RUNTIME = 1,
@@ -716,8 +760,7 @@ export declare function fieldOptions_OptionRetentionToJSON(object: FieldOptions_
 /**
  * This indicates the types of entities that the field may apply to when used
  * as an option. If it is unset, then the field may be freely used as an
- * option on any kind of entity. Note: as of January 2023, support for this is
- * in progress and does not yet have an effect (b/264593489).
+ * option on any kind of entity.
  */
 export declare enum FieldOptions_OptionTargetType {
     TARGET_TYPE_UNKNOWN = 0,
@@ -765,7 +808,12 @@ export interface FieldOptions_FeatureSupport {
     editionRemoved?: Edition | undefined;
 }
 export interface OneofOptions {
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /** The parser stores options it doesn't recognize here. See above. */
     uninterpretedOption: UninterpretedOption[];
@@ -794,7 +842,12 @@ export interface EnumOptions {
      * @deprecated
      */
     deprecatedLegacyJsonFieldConflicts?: boolean | undefined;
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /** The parser stores options it doesn't recognize here. See above. */
     uninterpretedOption: UninterpretedOption[];
@@ -807,7 +860,12 @@ export interface EnumValueOptions {
      * this is a formalization for deprecating enum values.
      */
     deprecated?: boolean | undefined;
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /**
      * Indicate that fields annotated with this enum value should not be printed
@@ -821,7 +879,12 @@ export interface EnumValueOptions {
     uninterpretedOption: UninterpretedOption[];
 }
 export interface ServiceOptions {
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /**
      * Is this service deprecated?
@@ -842,7 +905,12 @@ export interface MethodOptions {
      */
     deprecated?: boolean | undefined;
     idempotencyLevel?: MethodOptions_IdempotencyLevel | undefined;
-    /** Any features defined in the specific edition. */
+    /**
+     * Any features defined in the specific edition.
+     * WARNING: This field should only be used by protobuf plugins or special
+     * cases like the proto compiler. Other uses are discouraged and
+     * developers should rely on the protoreflect APIs for their client language.
+     */
     features?: FeatureSet | undefined;
     /** The parser stores options it doesn't recognize here. See above. */
     uninterpretedOption: UninterpretedOption[];
@@ -909,6 +977,8 @@ export interface FeatureSet {
     utf8Validation?: FeatureSet_Utf8Validation | undefined;
     messageEncoding?: FeatureSet_MessageEncoding | undefined;
     jsonFormat?: FeatureSet_JsonFormat | undefined;
+    enforceNamingStyle?: FeatureSet_EnforceNamingStyle | undefined;
+    defaultSymbolVisibility?: FeatureSet_VisibilityFeature_DefaultSymbolVisibility | undefined;
 }
 export declare enum FeatureSet_FieldPresence {
     FIELD_PRESENCE_UNKNOWN = 0,
@@ -959,6 +1029,34 @@ export declare enum FeatureSet_JsonFormat {
 }
 export declare function featureSet_JsonFormatFromJSON(object: any): FeatureSet_JsonFormat;
 export declare function featureSet_JsonFormatToJSON(object: FeatureSet_JsonFormat): string;
+export declare enum FeatureSet_EnforceNamingStyle {
+    ENFORCE_NAMING_STYLE_UNKNOWN = 0,
+    STYLE2024 = 1,
+    STYLE_LEGACY = 2,
+    UNRECOGNIZED = -1
+}
+export declare function featureSet_EnforceNamingStyleFromJSON(object: any): FeatureSet_EnforceNamingStyle;
+export declare function featureSet_EnforceNamingStyleToJSON(object: FeatureSet_EnforceNamingStyle): string;
+export interface FeatureSet_VisibilityFeature {
+}
+export declare enum FeatureSet_VisibilityFeature_DefaultSymbolVisibility {
+    DEFAULT_SYMBOL_VISIBILITY_UNKNOWN = 0,
+    /** EXPORT_ALL - Default pre-EDITION_2024, all UNSET visibility are export. */
+    EXPORT_ALL = 1,
+    /** EXPORT_TOP_LEVEL - All top-level symbols default to export, nested default to local. */
+    EXPORT_TOP_LEVEL = 2,
+    /** LOCAL_ALL - All symbols default to local. */
+    LOCAL_ALL = 3,
+    /**
+     * STRICT - All symbols local by default. Nested types cannot be exported.
+     * With special case caveat for message { enum {} reserved 1 to max; }
+     * This is the recommended setting for new protos.
+     */
+    STRICT = 4,
+    UNRECOGNIZED = -1
+}
+export declare function featureSet_VisibilityFeature_DefaultSymbolVisibilityFromJSON(object: any): FeatureSet_VisibilityFeature_DefaultSymbolVisibility;
+export declare function featureSet_VisibilityFeature_DefaultSymbolVisibilityToJSON(object: FeatureSet_VisibilityFeature_DefaultSymbolVisibility): string;
 /**
  * A compiled specification for the defaults of a set of features.  These
  * messages are generated from FeatureSet extensions and can be used to seed
@@ -1206,6 +1304,7 @@ export declare const MethodOptions: MessageFns<MethodOptions>;
 export declare const UninterpretedOption: MessageFns<UninterpretedOption>;
 export declare const UninterpretedOption_NamePart: MessageFns<UninterpretedOption_NamePart>;
 export declare const FeatureSet: MessageFns<FeatureSet>;
+export declare const FeatureSet_VisibilityFeature: MessageFns<FeatureSet_VisibilityFeature>;
 export declare const FeatureSetDefaults: MessageFns<FeatureSetDefaults>;
 export declare const FeatureSetDefaults_FeatureSetEditionDefault: MessageFns<FeatureSetDefaults_FeatureSetEditionDefault>;
 export declare const SourceCodeInfo: MessageFns<SourceCodeInfo>;

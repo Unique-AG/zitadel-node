@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Details, ListDetails, ListQuery, Organization } from "../../object/v2beta/object.js";
 import { PasskeyAuthenticator, PasskeyRegistrationCode, ReturnPasskeyRegistrationCode, SendPasskeyRegistrationLink } from "./auth.js";
 import { ReturnEmailVerificationCode, SendEmailVerificationCode, SetHumanEmail } from "./email.js";

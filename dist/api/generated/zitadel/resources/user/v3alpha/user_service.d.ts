@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { Instance, Organization } from "../../../object/v3alpha/object.js";
 import { Details, ListDetails, SearchQuery } from "../../object/v3alpha/object.js";
 import { AuthenticatorRegistrationCode, IdentityProviderIntent, IDPAuthenticator, IDPInformation, LDAPCredentials, RedirectURLs, ReturnPasswordResetCode, ReturnWebAuthNRegistrationCode, SendPasswordResetEmail, SendPasswordResetSMS, SendWebAuthNRegistrationLink, SetPassword, SetUsername, StartWebAuthNRegistration, VerifyWebAuthNRegistration } from "./authenticator.js";

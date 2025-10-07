@@ -1,6 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
-import { type CallContext, type CallOptions } from "nice-grpc-common";
+import type { CallContext, CallOptions } from "nice-grpc-common";
 import { InstanceInformation, ResourceCount } from "./telemetry.js";
 export declare const protobufPackage = "zitadel.analytics.v2beta";
 export interface ReportBaseInformationRequest {

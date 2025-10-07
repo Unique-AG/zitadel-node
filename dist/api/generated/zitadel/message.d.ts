@@ -5,11 +5,17 @@ export interface ErrorDetail {
     id: string;
     message: string;
 }
+export interface CredentialsCheckError {
+    id: string;
+    message: string;
+    failedAttempts: number;
+}
 export interface LocalizedMessage {
     key: string;
     localizedMessage: string;
 }
 export declare const ErrorDetail: MessageFns<ErrorDetail>;
+export declare const CredentialsCheckError: MessageFns<CredentialsCheckError>;
 export declare const LocalizedMessage: MessageFns<LocalizedMessage>;
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {

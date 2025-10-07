@@ -5,11 +5,8 @@ import { FeatureFlag, ImprovedPerformance, ImprovedPerformanceFeatureFlag } from
 export declare const protobufPackage = "zitadel.feature.v2beta";
 export interface SetSystemFeaturesRequest {
     loginDefaultOrg?: boolean | undefined;
-    oidcTriggerIntrospectionProjections?: boolean | undefined;
-    oidcLegacyIntrospection?: boolean | undefined;
     userSchema?: boolean | undefined;
     oidcTokenExchange?: boolean | undefined;
-    actions?: boolean | undefined;
     improvedPerformance: ImprovedPerformance[];
     oidcSingleV1SessionTermination?: boolean | undefined;
 }
@@ -26,11 +23,8 @@ export interface GetSystemFeaturesRequest {
 export interface GetSystemFeaturesResponse {
     details: Details | undefined;
     loginDefaultOrg: FeatureFlag | undefined;
-    oidcTriggerIntrospectionProjections: FeatureFlag | undefined;
-    oidcLegacyIntrospection: FeatureFlag | undefined;
     userSchema: FeatureFlag | undefined;
     oidcTokenExchange: FeatureFlag | undefined;
-    actions: FeatureFlag | undefined;
     improvedPerformance: ImprovedPerformanceFeatureFlag | undefined;
     oidcSingleV1SessionTermination: FeatureFlag | undefined;
 }

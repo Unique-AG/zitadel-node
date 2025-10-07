@@ -117,12 +117,17 @@ export declare const CheckWebAuthN: MessageFns<CheckWebAuthN>;
 export declare const CheckIDPIntent: MessageFns<CheckIDPIntent>;
 export declare const CheckTOTP: MessageFns<CheckTOTP>;
 export declare const CheckOTP: MessageFns<CheckOTP>;
+/** Deprecated: use session service v2 instead. This service will be removed in the next major version of ZITADEL. */
 export type SessionServiceDefinition = typeof SessionServiceDefinition;
 export declare const SessionServiceDefinition: {
     readonly name: "SessionService";
     readonly fullName: "zitadel.session.v2beta.SessionService";
     readonly methods: {
-        /** Search sessions */
+        /**
+         * Search sessions
+         *
+         * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+         */
         readonly listSessions: {
             readonly name: "ListSessions";
             readonly requestType: MessageFns<ListSessionsRequest>;
@@ -137,7 +142,11 @@ export declare const SessionServiceDefinition: {
                 };
             };
         };
-        /** GetSession a session */
+        /**
+         * GetSession a session
+         *
+         * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+         */
         readonly getSession: {
             readonly name: "GetSession";
             readonly requestType: MessageFns<GetSessionRequest>;
@@ -152,7 +161,11 @@ export declare const SessionServiceDefinition: {
                 };
             };
         };
-        /** Create a new session */
+        /**
+         * Create a new session
+         *
+         * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+         */
         readonly createSession: {
             readonly name: "CreateSession";
             readonly requestType: MessageFns<CreateSessionRequest>;
@@ -167,7 +180,11 @@ export declare const SessionServiceDefinition: {
                 };
             };
         };
-        /** Update a session */
+        /**
+         * Update a session
+         *
+         * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+         */
         readonly setSession: {
             readonly name: "SetSession";
             readonly requestType: MessageFns<SetSessionRequest>;
@@ -182,7 +199,11 @@ export declare const SessionServiceDefinition: {
                 };
             };
         };
-        /** Terminate a session */
+        /**
+         * Terminate a session
+         *
+         * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+         */
         readonly deleteSession: {
             readonly name: "DeleteSession";
             readonly requestType: MessageFns<DeleteSessionRequest>;
@@ -200,27 +221,67 @@ export declare const SessionServiceDefinition: {
     };
 };
 export interface SessionServiceImplementation<CallContextExt = {}> {
-    /** Search sessions */
+    /**
+     * Search sessions
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     listSessions(request: ListSessionsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListSessionsResponse>>;
-    /** GetSession a session */
+    /**
+     * GetSession a session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     getSession(request: GetSessionRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetSessionResponse>>;
-    /** Create a new session */
+    /**
+     * Create a new session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     createSession(request: CreateSessionRequest, context: CallContext & CallContextExt): Promise<DeepPartial<CreateSessionResponse>>;
-    /** Update a session */
+    /**
+     * Update a session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     setSession(request: SetSessionRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetSessionResponse>>;
-    /** Terminate a session */
+    /**
+     * Terminate a session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     deleteSession(request: DeleteSessionRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeleteSessionResponse>>;
 }
 export interface SessionServiceClient<CallOptionsExt = {}> {
-    /** Search sessions */
+    /**
+     * Search sessions
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     listSessions(request: DeepPartial<ListSessionsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListSessionsResponse>;
-    /** GetSession a session */
+    /**
+     * GetSession a session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     getSession(request: DeepPartial<GetSessionRequest>, options?: CallOptions & CallOptionsExt): Promise<GetSessionResponse>;
-    /** Create a new session */
+    /**
+     * Create a new session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     createSession(request: DeepPartial<CreateSessionRequest>, options?: CallOptions & CallOptionsExt): Promise<CreateSessionResponse>;
-    /** Update a session */
+    /**
+     * Update a session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     setSession(request: DeepPartial<SetSessionRequest>, options?: CallOptions & CallOptionsExt): Promise<SetSessionResponse>;
-    /** Terminate a session */
+    /**
+     * Terminate a session
+     *
+     * Deprecated: please move to the corresponding endpoint under session service v2. This endpoint will be removed with the next major version of ZITADEL.
+     */
     deleteSession(request: DeepPartial<DeleteSessionRequest>, options?: CallOptions & CallOptionsExt): Promise<DeleteSessionResponse>;
 }
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

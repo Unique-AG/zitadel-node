@@ -1165,6 +1165,13 @@ export declare const AuthServiceDefinition: {
                 };
             };
         };
+        /**
+         * List My Authorizations / User Grants
+         *
+         * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter with your users ID to search for your authorizations on granted and owned projects.
+         *
+         * Returns a list of the authorizations/user grants the authenticated user has. User grants consist of an organization, a project and 1-n roles.
+         */
         readonly listMyUserGrants: {
             readonly name: "ListMyUserGrants";
             readonly requestType: MessageFns<ListMyUserGrantsRequest>;
@@ -1207,6 +1214,13 @@ export declare const AuthServiceDefinition: {
                 };
             };
         };
+        /**
+         * List My Project Roles
+         *
+         * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter with your users ID and the project ID filter to search for your authorizations on a granted and an owned project.
+         *
+         * Returns a list of roles for the authenticated user and for the requesting project.
+         */
         readonly listMyProjectPermissions: {
             readonly name: "ListMyProjectPermissions";
             readonly requestType: MessageFns<ListMyProjectPermissionsRequest>;
@@ -1326,9 +1340,23 @@ export interface AuthServiceImplementation<CallContextExt = {}> {
     sendMyPasswordlessLink(request: SendMyPasswordlessLinkRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SendMyPasswordlessLinkResponse>>;
     verifyMyPasswordless(request: VerifyMyPasswordlessRequest, context: CallContext & CallContextExt): Promise<DeepPartial<VerifyMyPasswordlessResponse>>;
     removeMyPasswordless(request: RemoveMyPasswordlessRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveMyPasswordlessResponse>>;
+    /**
+     * List My Authorizations / User Grants
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter with your users ID to search for your authorizations on granted and owned projects.
+     *
+     * Returns a list of the authorizations/user grants the authenticated user has. User grants consist of an organization, a project and 1-n roles.
+     */
     listMyUserGrants(request: ListMyUserGrantsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListMyUserGrantsResponse>>;
     listMyProjectOrgs(request: ListMyProjectOrgsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListMyProjectOrgsResponse>>;
     listMyZitadelPermissions(request: ListMyZitadelPermissionsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListMyZitadelPermissionsResponse>>;
+    /**
+     * List My Project Roles
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter with your users ID and the project ID filter to search for your authorizations on a granted and an owned project.
+     *
+     * Returns a list of roles for the authenticated user and for the requesting project.
+     */
     listMyProjectPermissions(request: ListMyProjectPermissionsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListMyProjectPermissionsResponse>>;
     listMyMemberships(request: ListMyMembershipsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListMyMembershipsResponse>>;
     getMyLabelPolicy(request: GetMyLabelPolicyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetMyLabelPolicyResponse>>;
@@ -1382,9 +1410,23 @@ export interface AuthServiceClient<CallOptionsExt = {}> {
     sendMyPasswordlessLink(request: DeepPartial<SendMyPasswordlessLinkRequest>, options?: CallOptions & CallOptionsExt): Promise<SendMyPasswordlessLinkResponse>;
     verifyMyPasswordless(request: DeepPartial<VerifyMyPasswordlessRequest>, options?: CallOptions & CallOptionsExt): Promise<VerifyMyPasswordlessResponse>;
     removeMyPasswordless(request: DeepPartial<RemoveMyPasswordlessRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveMyPasswordlessResponse>;
+    /**
+     * List My Authorizations / User Grants
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter with your users ID to search for your authorizations on granted and owned projects.
+     *
+     * Returns a list of the authorizations/user grants the authenticated user has. User grants consist of an organization, a project and 1-n roles.
+     */
     listMyUserGrants(request: DeepPartial<ListMyUserGrantsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListMyUserGrantsResponse>;
     listMyProjectOrgs(request: DeepPartial<ListMyProjectOrgsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListMyProjectOrgsResponse>;
     listMyZitadelPermissions(request: DeepPartial<ListMyZitadelPermissionsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListMyZitadelPermissionsResponse>;
+    /**
+     * List My Project Roles
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter with your users ID and the project ID filter to search for your authorizations on a granted and an owned project.
+     *
+     * Returns a list of roles for the authenticated user and for the requesting project.
+     */
     listMyProjectPermissions(request: DeepPartial<ListMyProjectPermissionsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListMyProjectPermissionsResponse>;
     listMyMemberships(request: DeepPartial<ListMyMembershipsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListMyMembershipsResponse>;
     getMyLabelPolicy(request: DeepPartial<GetMyLabelPolicyRequest>, options?: CallOptions & CallOptionsExt): Promise<GetMyLabelPolicyResponse>;

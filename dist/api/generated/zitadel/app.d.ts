@@ -104,14 +104,26 @@ export interface OIDCConfig {
     allowedOrigins: string[];
     skipNativeAppSuccessPage: boolean;
     backChannelLogoutUri: string;
+    loginVersion: LoginVersion | undefined;
 }
 export interface SAMLConfig {
     metadataXml?: Buffer | undefined;
     metadataUrl?: string | undefined;
+    loginVersion: LoginVersion | undefined;
 }
 export interface APIConfig {
     clientId: string;
     authMethodType: APIAuthMethodType;
+}
+export interface LoginVersion {
+    loginV1?: LoginV1 | undefined;
+    loginV2?: LoginV2 | undefined;
+}
+export interface LoginV1 {
+}
+export interface LoginV2 {
+    /** Optionally specify a base uri of the login UI. If unspecified the default URI will be used. */
+    baseUri?: string | undefined;
 }
 export declare const App: MessageFns<App>;
 export declare const AppQuery: MessageFns<AppQuery>;
@@ -119,6 +131,9 @@ export declare const AppNameQuery: MessageFns<AppNameQuery>;
 export declare const OIDCConfig: MessageFns<OIDCConfig>;
 export declare const SAMLConfig: MessageFns<SAMLConfig>;
 export declare const APIConfig: MessageFns<APIConfig>;
+export declare const LoginVersion: MessageFns<LoginVersion>;
+export declare const LoginV1: MessageFns<LoginV1>;
+export declare const LoginV2: MessageFns<LoginV2>;
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {
     [K in keyof T]?: DeepPartial<T[K]>;

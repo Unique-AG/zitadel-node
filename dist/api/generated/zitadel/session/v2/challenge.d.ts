@@ -11,15 +11,47 @@ export declare enum UserVerificationRequirement {
 export declare function userVerificationRequirementFromJSON(object: any): UserVerificationRequirement;
 export declare function userVerificationRequirementToJSON(object: UserVerificationRequirement): string;
 export interface RequestChallenges {
+    /**
+     * WebAuthN requests a challenge to be used in the WebAuthN authentication ceremony.
+     * They can be used for both passkey and U2F authentication.
+     * They're required for a webauthn check at the SetSession endpoint.
+     */
     webAuthN?: RequestChallenges_WebAuthN | undefined;
+    /**
+     * OTPSMS requests a code to be sent via SMS to the user's primary phone.
+     * It is required for an OTP check at the SetSession endpoint.
+     */
     otpSms?: RequestChallenges_OTPSMS | undefined;
+    /**
+     * OTPEmail requests a code to be sent via email to the user's primary email address.
+     * It is required for an OTP check at the SetSession endpoint.
+     */
     otpEmail?: RequestChallenges_OTPEmail | undefined;
 }
 export interface RequestChallenges_WebAuthN {
+    /**
+     * The domain on which the session was created. Will be used in the WebAuthN challenge.
+     * It must be either the exact domain or a top-level domain of the origin of the request.
+     * For example if the request is coming from "login.example.com", the domain can be
+     * "login.example.com" or "example.com", but not "other.com" or "sub.login.example.com".
+     * See also: https://www.w3.org/TR/webauthn/#relying-party-identifier
+     */
     domain: string;
+    /**
+     * User verification that is required during validation.
+     * When set to `USER_VERIFICATION_REQUIREMENT_REQUIRED` the behaviour is for passkey authentication.
+     * Other values will mean U2F.
+     * See also: https://www.w3.org/TR/webauthn/#enum-userVerificationRequirement
+     * If either the value is set to USER_VERIFICATION_REQUIREMENT_REQUIRED or the user verification
+     * is passed as part of the authentication ceremony, the user_verified flag will be set in the resulting webauthn factor.
+     */
     userVerificationRequirement: UserVerificationRequirement;
 }
 export interface RequestChallenges_OTPSMS {
+    /**
+     * Request the code to be returned instead of sending an SMS.
+     * This is useful for testing or in case you want to send the code yourself.
+     */
     returnCode: boolean;
 }
 export interface RequestChallenges_OTPEmail {
@@ -42,6 +74,11 @@ export interface Challenges {
     otpSms?: string | undefined;
     otpEmail?: string | undefined;
 }
+/**
+ * WebAuthN contains the options for the Assertion Generation (dictionary PublicKeyCredentialRequestOptions).
+ * Generated helper methods transform the field to JSON, for use in a WebauthN client.
+ * See also: https://www.w3.org/TR/webauthn/#dictdef-publickeycredentialrequestoptions
+ */
 export interface Challenges_WebAuthN {
     publicKeyCredentialRequestOptions: {
         [key: string]: any;

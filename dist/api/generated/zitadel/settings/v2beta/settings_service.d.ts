@@ -1,12 +1,14 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
 import { type CallContext, type CallOptions } from "nice-grpc-common";
+import { PaginationRequest, PaginationResponse } from "../../filter/v2beta/filter.js";
 import { Details, ListDetails, RequestContext } from "../../object/v2beta/object.js";
 import { BrandingSettings } from "./branding_settings.js";
 import { DomainSettings } from "./domain_settings.js";
 import { LegalAndSupportSettings } from "./legal_settings.js";
 import { LockoutSettings } from "./lockout_settings.js";
 import { IdentityProvider, LoginSettings } from "./login_settings.js";
+import { OrganizationSettings, OrganizationSettingsFieldName, OrganizationSettingsSearchFilter } from "./organization_settings.js";
 import { PasswordComplexitySettings, PasswordExpirySettings } from "./password_settings.js";
 import { EmbeddedIframeSettings, SecuritySettings } from "./security_settings.js";
 export declare const protobufPackage = "zitadel.settings.v2beta";
@@ -87,6 +89,35 @@ export interface SetSecuritySettingsRequest {
 export interface SetSecuritySettingsResponse {
     details: Details | undefined;
 }
+export interface SetOrganizationSettingsRequest {
+    /** Organization ID in which this settings are set. */
+    organizationId: string;
+    /** Force the usernames in the organization to be unique, only possible to set if the existing users already have unique usernames in the organization context. */
+    organizationScopedUsernames?: boolean | undefined;
+}
+export interface SetOrganizationSettingsResponse {
+    /** The timestamp of the set of the organization settings. */
+    setDate: Date | undefined;
+}
+export interface DeleteOrganizationSettingsRequest {
+    /** Organization ID in which this settings are set. */
+    organizationId: string;
+}
+export interface DeleteOrganizationSettingsResponse {
+    /** The timestamp of the deletion of the organization settings. */
+    deletionDate: Date | undefined;
+}
+export interface ListOrganizationSettingsRequest {
+    /** List limitations and ordering. */
+    pagination?: PaginationRequest | undefined;
+    /** The field the result is sorted by. The default is the creation date. Beware that if you change this, your result pagination might be inconsistent. */
+    sortingColumn?: OrganizationSettingsFieldName | undefined;
+    filters: OrganizationSettingsSearchFilter[];
+}
+export interface ListOrganizationSettingsResponse {
+    pagination: PaginationResponse | undefined;
+    organizationSettings: OrganizationSettings[];
+}
 export declare const GetLoginSettingsRequest: MessageFns<GetLoginSettingsRequest>;
 export declare const GetLoginSettingsResponse: MessageFns<GetLoginSettingsResponse>;
 export declare const GetPasswordComplexitySettingsRequest: MessageFns<GetPasswordComplexitySettingsRequest>;
@@ -109,6 +140,12 @@ export declare const GetSecuritySettingsRequest: MessageFns<GetSecuritySettingsR
 export declare const GetSecuritySettingsResponse: MessageFns<GetSecuritySettingsResponse>;
 export declare const SetSecuritySettingsRequest: MessageFns<SetSecuritySettingsRequest>;
 export declare const SetSecuritySettingsResponse: MessageFns<SetSecuritySettingsResponse>;
+export declare const SetOrganizationSettingsRequest: MessageFns<SetOrganizationSettingsRequest>;
+export declare const SetOrganizationSettingsResponse: MessageFns<SetOrganizationSettingsResponse>;
+export declare const DeleteOrganizationSettingsRequest: MessageFns<DeleteOrganizationSettingsRequest>;
+export declare const DeleteOrganizationSettingsResponse: MessageFns<DeleteOrganizationSettingsResponse>;
+export declare const ListOrganizationSettingsRequest: MessageFns<ListOrganizationSettingsRequest>;
+export declare const ListOrganizationSettingsResponse: MessageFns<ListOrganizationSettingsResponse>;
 export type SettingsServiceDefinition = typeof SettingsServiceDefinition;
 export declare const SettingsServiceDefinition: {
     readonly name: "SettingsService";
@@ -279,6 +316,74 @@ export declare const SettingsServiceDefinition: {
                 };
             };
         };
+        /**
+         * Set Organization Settings
+         *
+         * Sets the settings specific to an organization.
+         * Organization scopes usernames defines that the usernames have to be unique in the organization scope, can only be changed if the usernames of the users are unique in the scope.
+         *
+         * Required permissions:
+         *   - `iam.policy.write`
+         */
+        readonly setOrganizationSettings: {
+            readonly name: "SetOrganizationSettings";
+            readonly requestType: MessageFns<SetOrganizationSettingsRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<SetOrganizationSettingsResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Delete Organization Settings
+         *
+         * Delete the settings specific to an organization.
+         *
+         * Required permissions:
+         *   - `iam.policy.delete`
+         */
+        readonly deleteOrganizationSettings: {
+            readonly name: "DeleteOrganizationSettings";
+            readonly requestType: MessageFns<DeleteOrganizationSettingsRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<DeleteOrganizationSettingsResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * List Organization Settings
+         *
+         * Returns a list of organization settings.
+         *
+         * Required permission:
+         *   - `iam.policy.read`
+         *   - `org.policy.read`
+         */
+        readonly listOrganizationSettings: {
+            readonly name: "ListOrganizationSettings";
+            readonly requestType: MessageFns<ListOrganizationSettingsRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<ListOrganizationSettingsResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
     };
 };
 export interface SettingsServiceImplementation<CallContextExt = {}> {
@@ -304,6 +409,35 @@ export interface SettingsServiceImplementation<CallContextExt = {}> {
     getSecuritySettings(request: GetSecuritySettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetSecuritySettingsResponse>>;
     /** Set the security settings */
     setSecuritySettings(request: SetSecuritySettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetSecuritySettingsResponse>>;
+    /**
+     * Set Organization Settings
+     *
+     * Sets the settings specific to an organization.
+     * Organization scopes usernames defines that the usernames have to be unique in the organization scope, can only be changed if the usernames of the users are unique in the scope.
+     *
+     * Required permissions:
+     *   - `iam.policy.write`
+     */
+    setOrganizationSettings(request: SetOrganizationSettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetOrganizationSettingsResponse>>;
+    /**
+     * Delete Organization Settings
+     *
+     * Delete the settings specific to an organization.
+     *
+     * Required permissions:
+     *   - `iam.policy.delete`
+     */
+    deleteOrganizationSettings(request: DeleteOrganizationSettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeleteOrganizationSettingsResponse>>;
+    /**
+     * List Organization Settings
+     *
+     * Returns a list of organization settings.
+     *
+     * Required permission:
+     *   - `iam.policy.read`
+     *   - `org.policy.read`
+     */
+    listOrganizationSettings(request: ListOrganizationSettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrganizationSettingsResponse>>;
 }
 export interface SettingsServiceClient<CallOptionsExt = {}> {
     /** Get basic information over the instance */
@@ -328,6 +462,35 @@ export interface SettingsServiceClient<CallOptionsExt = {}> {
     getSecuritySettings(request: DeepPartial<GetSecuritySettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<GetSecuritySettingsResponse>;
     /** Set the security settings */
     setSecuritySettings(request: DeepPartial<SetSecuritySettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<SetSecuritySettingsResponse>;
+    /**
+     * Set Organization Settings
+     *
+     * Sets the settings specific to an organization.
+     * Organization scopes usernames defines that the usernames have to be unique in the organization scope, can only be changed if the usernames of the users are unique in the scope.
+     *
+     * Required permissions:
+     *   - `iam.policy.write`
+     */
+    setOrganizationSettings(request: DeepPartial<SetOrganizationSettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<SetOrganizationSettingsResponse>;
+    /**
+     * Delete Organization Settings
+     *
+     * Delete the settings specific to an organization.
+     *
+     * Required permissions:
+     *   - `iam.policy.delete`
+     */
+    deleteOrganizationSettings(request: DeepPartial<DeleteOrganizationSettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<DeleteOrganizationSettingsResponse>;
+    /**
+     * List Organization Settings
+     *
+     * Returns a list of organization settings.
+     *
+     * Required permission:
+     *   - `iam.policy.read`
+     *   - `org.policy.read`
+     */
+    listOrganizationSettings(request: DeepPartial<ListOrganizationSettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrganizationSettingsResponse>;
 }
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {

@@ -28,11 +28,19 @@ export declare const GetAuthRequestResponse: MessageFns<GetAuthRequestResponse>;
 export declare const CreateCallbackRequest: MessageFns<CreateCallbackRequest>;
 export declare const Session: MessageFns<Session>;
 export declare const CreateCallbackResponse: MessageFns<CreateCallbackResponse>;
+/** Deprecated: use oidc service v2 instead. This service will be removed in the next major version of ZITADEL. */
 export type OIDCServiceDefinition = typeof OIDCServiceDefinition;
 export declare const OIDCServiceDefinition: {
     readonly name: "OIDCService";
     readonly fullName: "zitadel.oidc.v2beta.OIDCService";
     readonly methods: {
+        /**
+         * Get AuthRequest
+         *
+         * Deprecated: please move to the corresponding endpoint under oidc service v2. This endpoint will be removed with the next major version of ZITADEL.
+         *
+         * Get OIDC Auth Request details by ID, obtained from the redirect URL. Returns details that are parsed from the application's Auth Request.
+         */
         readonly getAuthRequest: {
             readonly name: "GetAuthRequest";
             readonly requestType: MessageFns<GetAuthRequestRequest>;
@@ -47,6 +55,16 @@ export declare const OIDCServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Callback
+         *
+         * Deprecated: please move to the corresponding endpoint under oidc service v2. This endpoint will be removed with the next major version of ZITADEL.
+         *
+         * Finalize an Auth Request and get the callback URL for success or failure.
+         * The user must be redirected to the URL in order to inform the application about the success or failure.
+         * On success, the URL contains details for the application to obtain the tokens.
+         * This method can only be called once for an Auth request.
+         */
         readonly createCallback: {
             readonly name: "CreateCallback";
             readonly requestType: MessageFns<CreateCallbackRequest>;
@@ -64,11 +82,45 @@ export declare const OIDCServiceDefinition: {
     };
 };
 export interface OIDCServiceImplementation<CallContextExt = {}> {
+    /**
+     * Get AuthRequest
+     *
+     * Deprecated: please move to the corresponding endpoint under oidc service v2. This endpoint will be removed with the next major version of ZITADEL.
+     *
+     * Get OIDC Auth Request details by ID, obtained from the redirect URL. Returns details that are parsed from the application's Auth Request.
+     */
     getAuthRequest(request: GetAuthRequestRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetAuthRequestResponse>>;
+    /**
+     * Create Callback
+     *
+     * Deprecated: please move to the corresponding endpoint under oidc service v2. This endpoint will be removed with the next major version of ZITADEL.
+     *
+     * Finalize an Auth Request and get the callback URL for success or failure.
+     * The user must be redirected to the URL in order to inform the application about the success or failure.
+     * On success, the URL contains details for the application to obtain the tokens.
+     * This method can only be called once for an Auth request.
+     */
     createCallback(request: CreateCallbackRequest, context: CallContext & CallContextExt): Promise<DeepPartial<CreateCallbackResponse>>;
 }
 export interface OIDCServiceClient<CallOptionsExt = {}> {
+    /**
+     * Get AuthRequest
+     *
+     * Deprecated: please move to the corresponding endpoint under oidc service v2. This endpoint will be removed with the next major version of ZITADEL.
+     *
+     * Get OIDC Auth Request details by ID, obtained from the redirect URL. Returns details that are parsed from the application's Auth Request.
+     */
     getAuthRequest(request: DeepPartial<GetAuthRequestRequest>, options?: CallOptions & CallOptionsExt): Promise<GetAuthRequestResponse>;
+    /**
+     * Create Callback
+     *
+     * Deprecated: please move to the corresponding endpoint under oidc service v2. This endpoint will be removed with the next major version of ZITADEL.
+     *
+     * Finalize an Auth Request and get the callback URL for success or failure.
+     * The user must be redirected to the URL in order to inform the application about the success or failure.
+     * On success, the URL contains details for the application to obtain the tokens.
+     * This method can only be called once for an Auth request.
+     */
     createCallback(request: DeepPartial<CreateCallbackRequest>, options?: CallOptions & CallOptionsExt): Promise<CreateCallbackResponse>;
 }
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

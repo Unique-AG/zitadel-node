@@ -87,6 +87,7 @@ export interface EmailProviderSMTP {
 }
 export interface EmailProviderHTTP {
     endpoint: string;
+    signingKey: string;
 }
 export interface SMSProvider {
     details: ObjectDetails | undefined;
@@ -103,6 +104,7 @@ export interface TwilioConfig {
 }
 export interface HTTPConfig {
     endpoint: string;
+    signingKey: string;
 }
 export interface DebugNotificationProvider {
     details: ObjectDetails | undefined;

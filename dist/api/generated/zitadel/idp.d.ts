@@ -80,6 +80,15 @@ export declare enum SAMLBinding {
 }
 export declare function sAMLBindingFromJSON(object: any): SAMLBinding;
 export declare function sAMLBindingToJSON(object: SAMLBinding): string;
+export declare enum SAMLSignatureAlgorithm {
+    SAML_SIGNATURE_UNSPECIFIED = 0,
+    SAML_SIGNATURE_RSA_SHA1 = 1,
+    SAML_SIGNATURE_RSA_SHA256 = 2,
+    SAML_SIGNATURE_RSA_SHA512 = 3,
+    UNRECOGNIZED = -1
+}
+export declare function sAMLSignatureAlgorithmFromJSON(object: any): SAMLSignatureAlgorithm;
+export declare function sAMLSignatureAlgorithmToJSON(object: SAMLSignatureAlgorithm): string;
 export declare enum SAMLNameIDFormat {
     SAML_NAME_ID_FORMAT_UNSPECIFIED = 0,
     SAML_NAME_ID_FORMAT_EMAIL_ADDRESS = 1,
@@ -189,12 +198,16 @@ export interface OAuthConfig {
     userEndpoint: string;
     scopes: string[];
     idAttribute: string;
+    /** Defines if the Proof Key for Code Exchange (PKCE) is used for the authorization code flow. */
+    usePkce: boolean;
 }
 export interface GenericOIDCConfig {
     issuer: string;
     clientId: string;
     scopes: string[];
     isIdTokenMapping: boolean;
+    /** Defines if the Proof Key for Code Exchange (PKCE) is used for the authorization code flow. */
+    usePkce: boolean;
 }
 export interface GitHubConfig {
     clientId: string;
@@ -230,6 +243,7 @@ export interface LDAPConfig {
     userFilters: string[];
     timeout: Duration | undefined;
     attributes: LDAPAttributes | undefined;
+    rootCa: Buffer;
 }
 export interface SAMLConfig {
     /** Metadata of the SAML identity provider. */
@@ -245,6 +259,13 @@ export interface SAMLConfig {
      * in case the nameid-format returned is `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`.
      */
     transientMappingAttributeName?: string | undefined;
+    /**
+     * Boolean value to indicate whether federated logout is enabled. If enabled, ZITADEL will send a logout request to the identity provider,
+     * if the user terminates the session in ZITADEL. Be sure to provide a SLO endpoint as part of the metadata.
+     */
+    federatedLogoutEnabled?: boolean | undefined;
+    /** Optional value to indicate the configured Signing Algorithm used to sign SAML requests and responses. */
+    signatureAlgorithm?: SAMLSignatureAlgorithm | undefined;
 }
 export interface AzureADConfig {
     clientId: string;

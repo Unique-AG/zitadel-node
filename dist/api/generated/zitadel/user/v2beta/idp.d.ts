@@ -42,6 +42,23 @@ export interface IDPLink {
     userId: string;
     userName: string;
 }
+export interface FormData {
+    /** The URL to which the form should be submitted using the POST method. */
+    url: string;
+    /**
+     * The form fields to be submitted.
+     * Each field is represented as a key-value pair, where the key is the field / input name
+     * and the value is the field / input value.
+     * All fields need to be submitted as is and as input type "text".
+     */
+    fields: {
+        [key: string]: string;
+    };
+}
+export interface FormData_FieldsEntry {
+    key: string;
+    value: string;
+}
 export declare const LDAPCredentials: MessageFns<LDAPCredentials>;
 export declare const RedirectURLs: MessageFns<RedirectURLs>;
 export declare const IDPIntent: MessageFns<IDPIntent>;
@@ -50,6 +67,8 @@ export declare const IDPOAuthAccessInformation: MessageFns<IDPOAuthAccessInforma
 export declare const IDPLDAPAccessInformation: MessageFns<IDPLDAPAccessInformation>;
 export declare const IDPSAMLAccessInformation: MessageFns<IDPSAMLAccessInformation>;
 export declare const IDPLink: MessageFns<IDPLink>;
+export declare const FormData: MessageFns<FormData>;
+export declare const FormData_FieldsEntry: MessageFns<FormData_FieldsEntry>;
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {
     [K in keyof T]?: DeepPartial<T[K]>;

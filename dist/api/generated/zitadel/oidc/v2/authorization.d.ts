@@ -37,16 +37,42 @@ export declare enum ErrorReason {
 }
 export declare function errorReasonFromJSON(object: any): ErrorReason;
 export declare function errorReasonToJSON(object: ErrorReason): string;
+/**
+ * AuthRequest represents an OpenID Connect Authorization Request as defined in
+ * https://openid.net/specs/openid-connect-core-1_0.html#AuthRequest
+ */
 export interface AuthRequest {
+    /** The unique identifier of the authorization request. */
     id: string;
+    /** The timestamp when the authorization request was created. */
     creationDate: Date | undefined;
+    /** The OAuth2/OIDC client_id of the application that initiated the authorization request. */
     clientId: string;
+    /** The scopes by the application that the user must consent to. */
     scope: string[];
+    /**
+     * The redirect_uri used in the authorization request. This must exactly match one of the redirect URIs registered for the client.
+     * This uri is used to send the authorization code or tokens back to the application.
+     */
     redirectUri: string;
+    /** Prompts that must be displayed to the user. */
     prompt: Prompt[];
+    /**
+     * End-User's preferred languages and scripts for the user interface, represented as a list of BCP47 [RFC5646]
+     * language tag values, ordered by preference.
+     * For instance, the value [fr-CA, fr, en] represents a preference for French as spoken in Canada,
+     * then French (without a region designation), followed by English (without a region designation).
+     * An error SHOULD NOT result if some or all of the requested locales are not supported.
+     */
     uiLocales: string[];
+    /** Login hint can be set by the application with a user identifier such as an email or phone number. */
     loginHint?: string | undefined;
+    /**
+     * Specifies the allowable elapsed time in seconds since the last time the End-User was actively authenticated.
+     * If the elapsed time is greater than this value, or the field is present with 0 duration, the user must be re-authenticated.
+     */
     maxAge?: Duration | undefined;
+    /** User ID taken from a ID Token Hint if it was present and valid. */
     hintUserId?: string | undefined;
 }
 export interface AuthorizationError {
@@ -54,8 +80,21 @@ export interface AuthorizationError {
     errorDescription?: string | undefined;
     errorUri?: string | undefined;
 }
+export interface DeviceAuthorizationRequest {
+    /** The unique identifier of the device authorization request to be used for authorizing or denying the request. */
+    id: string;
+    /** The client_id of the application that initiated the device authorization request. */
+    clientId: string;
+    /** The scopes requested by the application. */
+    scope: string[];
+    /** Name of the client application. */
+    appName: string;
+    /** Name of the project the client application is part of. */
+    projectName: string;
+}
 export declare const AuthRequest: MessageFns<AuthRequest>;
 export declare const AuthorizationError: MessageFns<AuthorizationError>;
+export declare const DeviceAuthorizationRequest: MessageFns<DeviceAuthorizationRequest>;
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {
     [K in keyof T]?: DeepPartial<T[K]>;

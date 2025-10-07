@@ -1,6 +1,7 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
 import { Duration } from "../../../google/protobuf/duration.js";
+import { Options } from "../../idp/v2/idp.js";
 import { ResourceOwnerType } from "./settings.js";
 export declare const protobufPackage = "zitadel.settings.v2";
 export declare enum SecondFactorType {
@@ -74,6 +75,7 @@ export interface IdentityProvider {
     id: string;
     name: string;
     type: IdentityProviderType;
+    options: Options | undefined;
 }
 export declare const LoginSettings: MessageFns<LoginSettings>;
 export declare const IdentityProvider: MessageFns<IdentityProvider>;

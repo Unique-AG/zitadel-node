@@ -312,12 +312,16 @@ export interface UserGrantQuery {
     projectNameQuery?: UserGrantProjectNameQuery | undefined;
     displayNameQuery?: UserGrantDisplayNameQuery | undefined;
     userTypeQuery?: UserGrantUserTypeQuery | undefined;
+    inUserIdsQuery?: UserGrantInUserIDsQuery | undefined;
 }
 export interface UserGrantProjectIDQuery {
     projectId: string;
 }
 export interface UserGrantUserIDQuery {
     userId: string;
+}
+export interface UserGrantInUserIDsQuery {
+    inUserIds: string[];
 }
 export interface UserGrantWithGrantedQuery {
     withGranted: boolean;
@@ -406,6 +410,7 @@ export declare const UserGrant: MessageFns<UserGrant>;
 export declare const UserGrantQuery: MessageFns<UserGrantQuery>;
 export declare const UserGrantProjectIDQuery: MessageFns<UserGrantProjectIDQuery>;
 export declare const UserGrantUserIDQuery: MessageFns<UserGrantUserIDQuery>;
+export declare const UserGrantInUserIDsQuery: MessageFns<UserGrantInUserIDsQuery>;
 export declare const UserGrantWithGrantedQuery: MessageFns<UserGrantWithGrantedQuery>;
 export declare const UserGrantRoleKeyQuery: MessageFns<UserGrantRoleKeyQuery>;
 export declare const UserGrantProjectGrantIDQuery: MessageFns<UserGrantProjectGrantIDQuery>;

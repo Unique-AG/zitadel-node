@@ -3,6 +3,16 @@ import Long from "long";
 import { ObjectDetails, TextQueryMethod } from "./object.js";
 import { Type } from "./user.js";
 export declare const protobufPackage = "zitadel.member.v1";
+export declare enum MemberFieldColumnName {
+    MEMBER_FIELD_NAME_UNSPECIFIED = 0,
+    MEMBER_FIELD_NAME_USER_ID = 1,
+    MEMBER_FIELD_NAME_CREATION_DATE = 2,
+    MEMBER_FIELD_NAME_CHANGE_DATE = 3,
+    MEMBER_FIELD_NAME_USER_RESOURCE_OWNER = 4,
+    UNRECOGNIZED = -1
+}
+export declare function memberFieldColumnNameFromJSON(object: any): MemberFieldColumnName;
+export declare function memberFieldColumnNameToJSON(object: MemberFieldColumnName): string;
 export interface Member {
     userId: string;
     details: ObjectDetails | undefined;
@@ -14,6 +24,8 @@ export interface Member {
     displayName: string;
     avatarUrl: string;
     userType: Type;
+    /** The organization the user belong to. */
+    userResourceOwner: string;
 }
 export interface SearchQuery {
     firstNameQuery?: FirstNameQuery | undefined;

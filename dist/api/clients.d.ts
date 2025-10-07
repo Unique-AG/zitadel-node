@@ -14,6 +14,7 @@ import { UserServiceClient } from './generated/zitadel/user/v2beta/user_service.
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the Admin API of ZITADEL.
@@ -25,6 +26,7 @@ export declare function createAdminClient(apiEndpoint: string, grpcHeadersOverwr
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the Auth API of ZITADEL.
@@ -36,6 +38,7 @@ export declare function createAuthClient(apiEndpoint: string, grpcHeadersOverwri
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the Management API of ZITADEL.
@@ -47,6 +50,7 @@ export declare function createManagementClient(apiEndpoint: string, grpcHeadersO
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the OIDC API of ZITADEL.
@@ -58,6 +62,7 @@ export declare function createOidcClient(apiEndpoint: string, grpcHeadersOverwri
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the organization API of ZITADEL.
@@ -69,6 +74,7 @@ export declare function createOrganizationClient(apiEndpoint: string, grpcHeader
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the session API of ZITADEL.
@@ -80,6 +86,7 @@ export declare function createSessionClient(apiEndpoint: string, grpcHeadersOver
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the settings API of ZITADEL.
@@ -91,6 +98,7 @@ export declare function createSettingsClient(apiEndpoint: string, grpcHeadersOve
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the system API of ZITADEL.
@@ -102,6 +110,7 @@ export declare function createSystemClient(apiEndpoint: string, grpcHeadersOverw
  * see the interceptors in this package.
  *
  * @param apiEndpoint The API endpoint of your ZITADEL instance.
+ * @param grpcHeadersOverwrite A list of headers that should be used for the client.
  * @param interceptors A list of interceptors that should be used for the client.
  *
  * @returns A new gRPC service client for the user API of ZITADEL.

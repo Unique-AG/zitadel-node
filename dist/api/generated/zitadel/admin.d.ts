@@ -3,13 +3,13 @@ import Long from "long";
 import { type CallContext, type CallOptions } from "nice-grpc-common";
 import { Duration } from "../google/protobuf/duration.js";
 import { AggregateType, Event, EventType } from "./event.js";
-import { AzureADTenant, IDP, IDPFieldName, IDPIDQuery, IDPLoginPolicyLink, IDPNameQuery, IDPStylingType, IDPUserLink, LDAPAttributes, OIDCMappingField, Options, Provider, SAMLBinding, SAMLNameIDFormat } from "./idp.js";
+import { AzureADTenant, IDP, IDPFieldName, IDPIDQuery, IDPLoginPolicyLink, IDPNameQuery, IDPStylingType, IDPUserLink, LDAPAttributes, OIDCMappingField, Options, Provider, SAMLBinding, SAMLNameIDFormat, SAMLSignatureAlgorithm } from "./idp.js";
 import { Domain, DomainFieldName, DomainSearchQuery, InstanceDetail, TrustedDomain, TrustedDomainSearchQuery } from "./instance.js";
 import { AddCustomLabelPolicyRequest, AddCustomLockoutPolicyRequest, AddCustomLoginPolicyRequest, AddCustomPasswordComplexityPolicyRequest, AddCustomPrivacyPolicyRequest, AddOrgMemberRequest, AddOrgRequest, AddProjectGrantMemberRequest, AddProjectMemberRequest, AddProjectRoleRequest, AddUserGrantRequest, SetCustomDomainClaimedMessageTextRequest, SetCustomInitMessageTextRequest, SetCustomInviteUserMessageTextRequest, SetCustomLoginTextsRequest as SetCustomLoginTextsRequest2, SetCustomPasswordlessRegistrationMessageTextRequest, SetCustomPasswordResetMessageTextRequest, SetCustomVerifyEmailMessageTextRequest, SetCustomVerifyEmailOTPMessageTextRequest, SetCustomVerifyPhoneMessageTextRequest, SetCustomVerifySMSOTPMessageTextRequest, SetTriggerActionsRequest, SetUserMetadataRequest } from "./management.js";
-import { Member, SearchQuery } from "./member.js";
+import { Member, MemberFieldColumnName, SearchQuery } from "./member.js";
 import { Milestone, MilestoneFieldName, MilestoneQuery } from "./milestone/v1/milestone.js";
 import { ListDetails, ListQuery, ObjectDetails } from "./object.js";
-import { Domain as Domain3, Org, OrgFieldName, OrgQuery } from "./org.js";
+import { Domain as Domain3, Org, OrgFieldName, OrgQuery, OrgState } from "./org.js";
 import { DomainPolicy, LabelPolicy, LockoutPolicy, LoginPolicy, MultiFactorType, NotificationPolicy, OrgIAMPolicy, PasswordAgePolicy, PasswordComplexityPolicy, PasswordlessType, PrivacyPolicy, SecondFactorType, ThemeMode } from "./policy.js";
 import { DebugNotificationProvider, EmailProvider, OIDCSettings, SecretGenerator, SecretGeneratorQuery, SecretGeneratorType, SecurityPolicy, SMSProvider, SMTPConfig } from "./settings.js";
 import { EmailVerificationDoneScreenText, EmailVerificationScreenText, ExternalRegistrationUserOverviewScreenText, ExternalUserNotFoundScreenText, FooterText, InitializeUserDoneScreenText, InitializeUserScreenText, InitMFADoneScreenText, InitMFAOTPScreenText, InitMFAPromptScreenText, InitMFAU2FScreenText, InitPasswordDoneScreenText, InitPasswordScreenText, LinkingUserDoneScreenText, LinkingUserPromptScreenText, LoginCustomText, LoginScreenText, LogoutDoneScreenText, MessageCustomText, MFAProvidersText, PasswordChangeDoneScreenText, PasswordChangeScreenText, PasswordlessPromptScreenText, PasswordlessRegistrationDoneScreenText, PasswordlessRegistrationScreenText, PasswordlessScreenText, PasswordResetDoneScreenText, PasswordScreenText, RegistrationOptionScreenText, RegistrationOrgScreenText, RegistrationUserScreenText, SelectAccountScreenText, SuccessLoginScreenText, UsernameChangeDoneScreenText, UsernameChangeScreenText, VerifyMFAOTPScreenText, VerifyMFAU2FScreenText } from "./text.js";
@@ -281,14 +281,28 @@ export interface AddEmailProviderHTTPRequest {
 export interface AddEmailProviderHTTPResponse {
     details: ObjectDetails | undefined;
     id: string;
+    /** Key used to sign and check payload sent to the HTTP provider. */
+    signingKey: string;
 }
 export interface UpdateEmailProviderHTTPRequest {
     id: string;
     endpoint: string;
     description: string;
+    /**
+     * Regenerate the key used for signing and checking the payload sent to the HTTP provider.
+     * Set the graceful period for the existing key. During that time, the previous
+     * signing key and the new one will be used to sign the request to allow you a smooth
+     * transition onf your API.
+     *
+     * Note that we currently only allow an immediate rotation ("0s") and will support
+     * longer expirations in the future.
+     */
+    expirationSigningKey?: Duration | undefined;
 }
 export interface UpdateEmailProviderHTTPResponse {
     details: ObjectDetails | undefined;
+    /** Key used to sign and check payload sent to the HTTP provider. */
+    signingKey?: string | undefined;
 }
 export interface ActivateEmailProviderRequest {
     id: string;
@@ -377,14 +391,28 @@ export interface AddSMSProviderHTTPRequest {
 export interface AddSMSProviderHTTPResponse {
     details: ObjectDetails | undefined;
     id: string;
+    /** Key used to sign and check payload sent to the HTTP provider. */
+    signingKey: string;
 }
 export interface UpdateSMSProviderHTTPRequest {
     id: string;
     endpoint: string;
     description: string;
+    /**
+     * Regenerate the key used for signing and checking the payload sent to the HTTP provider.
+     * Set the graceful period for the existing key. During that time, the previous
+     * signing key and the new one will be used to sign the request to allow you a smooth
+     * transition onf your API.
+     *
+     * Note that we currently only allow an immediate rotation ("0s") and will support
+     * longer expirations in the future.
+     */
+    expirationSigningKey?: Duration | undefined;
 }
 export interface UpdateSMSProviderHTTPResponse {
+    /** Key used to sign and check payload sent to the HTTP provider. */
     details: ObjectDetails | undefined;
+    signingKey?: string | undefined;
 }
 export interface ActivateSMSProviderRequest {
     id: string;
@@ -664,6 +692,8 @@ export interface AddGenericOAuthProviderRequest {
     /** identifying attribute of the user in the response of the user_endpoint */
     idAttribute: string;
     providerOptions: Options | undefined;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OAuth2 flow. */
+    usePkce: boolean;
 }
 export interface AddGenericOAuthProviderResponse {
     details: ObjectDetails | undefined;
@@ -682,6 +712,8 @@ export interface UpdateGenericOAuthProviderRequest {
     /** identifying attribute of the user in the response of the user_endpoint */
     idAttribute: string;
     providerOptions: Options | undefined;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OAuth2 flow. */
+    usePkce: boolean;
 }
 export interface UpdateGenericOAuthProviderResponse {
     details: ObjectDetails | undefined;
@@ -694,6 +726,8 @@ export interface AddGenericOIDCProviderRequest {
     scopes: string[];
     providerOptions: Options | undefined;
     isIdTokenMapping: boolean;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OIDC flow. */
+    usePkce: boolean;
 }
 export interface AddGenericOIDCProviderResponse {
     details: ObjectDetails | undefined;
@@ -709,6 +743,8 @@ export interface UpdateGenericOIDCProviderRequest {
     scopes: string[];
     providerOptions: Options | undefined;
     isIdTokenMapping: boolean;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OIDC flow. */
+    usePkce: boolean;
 }
 export interface UpdateGenericOIDCProviderResponse {
     details: ObjectDetails | undefined;
@@ -913,6 +949,8 @@ export interface AddLDAPProviderRequest {
     timeout: Duration | undefined;
     attributes: LDAPAttributes | undefined;
     providerOptions: Options | undefined;
+    /** Root_ca is for self signing certificates for TLS connections to LDAP servers it is intended to be filled with a .pem file. */
+    rootCa: Buffer;
 }
 export interface AddLDAPProviderResponse {
     details: ObjectDetails | undefined;
@@ -932,6 +970,8 @@ export interface UpdateLDAPProviderRequest {
     timeout: Duration | undefined;
     attributes: LDAPAttributes | undefined;
     providerOptions: Options | undefined;
+    /** Root_ca is for self signing certificates for TLS connections to LDAP servers it is intended to be filled with a .pem file. */
+    rootCa: Buffer;
 }
 export interface UpdateLDAPProviderResponse {
     details: ObjectDetails | undefined;
@@ -981,6 +1021,16 @@ export interface AddSAMLProviderRequest {
      * in case the nameid-format returned is `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`.
      */
     transientMappingAttributeName?: string | undefined;
+    /**
+     * Optionally enable federated logout. If enabled, ZITADEL will send a logout request to the identity provider,
+     * if the user terminates the session in ZITADEL. Be sure to provide a SLO endpoint as part of the metadata.
+     */
+    federatedLogoutEnabled?: boolean | undefined;
+    /**
+     * Specify a Signature Algorithm that should be used to sign SAML requests and responses.
+     * Can be used only if the `with_signed_request` option is set to true.
+     */
+    signatureAlgorithm: SAMLSignatureAlgorithm;
 }
 export interface AddSAMLProviderResponse {
     details: ObjectDetails | undefined;
@@ -1004,6 +1054,16 @@ export interface UpdateSAMLProviderRequest {
      * in case the nameid-format returned is `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`.
      */
     transientMappingAttributeName?: string | undefined;
+    /**
+     * Optionally enable federated logout. If enabled, ZITADEL will send a logout request to the identity provider,
+     * if the user terminates the session in ZITADEL. Be sure to provide a SLO endpoint as part of the metadata.
+     */
+    federatedLogoutEnabled?: boolean | undefined;
+    /**
+     * Specify a Signature Algorithm that should be used to sign SAML requests and responses.
+     * Can be used only if the `with_signed_request` option is set to true.
+     */
+    signatureAlgorithm: SAMLSignatureAlgorithm;
 }
 export interface UpdateSAMLProviderResponse {
     details: ObjectDetails | undefined;
@@ -1737,6 +1797,7 @@ export interface ListIAMMembersRequest {
     query: ListQuery | undefined;
     /** criteria the client is looking for */
     queries: SearchQuery[];
+    sortingColumn: MemberFieldColumnName;
 }
 export interface ListIAMMembersResponse {
     details: ListDetails | undefined;
@@ -1849,6 +1910,7 @@ export interface DataOrg {
     verifySmsOtpMessages: SetCustomVerifySMSOTPMessageTextRequest[];
     verifyEmailOtpMessages: SetCustomVerifyEmailOTPMessageTextRequest[];
     inviteUserMessages: SetCustomInviteUserMessageTextRequest[];
+    orgState: OrgState;
 }
 export interface ImportDataResponse {
     errors: ImportDataError[];
@@ -2520,6 +2582,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get My Instance
+         *
+         * Deprecated: use [instance service v2 GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead.
+         *
+         * Returns the details about the current instance such as the name, version, domains, etc.
+         */
         readonly getMyInstance: {
             readonly name: "GetMyInstance";
             readonly requestType: MessageFns<GetMyInstanceRequest>;
@@ -2534,6 +2603,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Instance Domains
+         *
+         * Deprecated: use [instance service v2 GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead.
+         *
+         * Returns a list of domains that are configured for this ZITADEL instance. These domains are the URLs where ZITADEL is running.
+         */
         readonly listInstanceDomains: {
             readonly name: "ListInstanceDomains";
             readonly requestType: MessageFns<ListInstanceDomainsRequest>;
@@ -2548,6 +2624,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Instance Trusted Domains
+         *
+         * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-trusted-domains.api.mdx) instead.
+         *
+         * Returns a list of domains that are configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+         */
         readonly listInstanceTrustedDomains: {
             readonly name: "ListInstanceTrustedDomains";
             readonly requestType: MessageFns<ListInstanceTrustedDomainsRequest>;
@@ -2562,6 +2645,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add an Instance Trusted Domain
+         *
+         * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-add-trusted-domain.api.mdx) instead.
+         *
+         * Add a domain to the list configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+         */
         readonly addInstanceTrustedDomain: {
             readonly name: "AddInstanceTrustedDomain";
             readonly requestType: MessageFns<AddInstanceTrustedDomainRequest>;
@@ -2576,6 +2666,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove an Instance Trusted Domain
+         *
+         * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-remove-trusted-domain.api.mdx) instead.
+         *
+         * Removes a domain from the list configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+         */
         readonly removeInstanceTrustedDomain: {
             readonly name: "RemoveInstanceTrustedDomain";
             readonly requestType: MessageFns<RemoveInstanceTrustedDomainRequest>;
@@ -3283,6 +3380,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Organization By ID
+         *
+         * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+         *
+         * Returns an organization by its ID. Make sure the user has the permissions to access the organization.
+         */
         readonly getOrgByID: {
             readonly name: "GetOrgByID";
             readonly requestType: MessageFns<GetOrgByIDRequest>;
@@ -3297,6 +3401,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Is Organization Unique
+         *
+         * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+         *
+         * Checks if an organization with the searched parameters already exists or not.
+         */
         readonly isOrgUnique: {
             readonly name: "IsOrgUnique";
             readonly requestType: MessageFns<IsOrgUniqueRequest>;
@@ -3325,6 +3436,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Default Organization
+         *
+         * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+         *
+         * Get the default organization of the ZITADEL instance. If no specific organization is given on the register form, a user will be registered to the default organization.
+         */
         readonly getDefaultOrg: {
             readonly name: "GetDefaultOrg";
             readonly requestType: MessageFns<GetDefaultOrgRequest>;
@@ -3339,6 +3457,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Organizations
+         *
+         * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+         *
+         * Returns a list of organizations that match the requesting filters. All filters are applied with an AND condition.
+         */
         readonly listOrgs: {
             readonly name: "ListOrgs";
             readonly requestType: MessageFns<ListOrgsRequest>;
@@ -3353,6 +3478,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Setup Organization
+         *
+         * Deprecated: use [organization service v2 CreateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-create-organization.api.mdx) instead.
+         *
+         * Create a new organization with an administrative user. If no specific roles are sent for the first user, the user will get the role ORG_OWNER.
+         */
         readonly setUpOrg: {
             readonly name: "SetUpOrg";
             readonly requestType: MessageFns<SetUpOrgRequest>;
@@ -3367,6 +3499,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Organization
+         *
+         * Deprecated: use [organization service v2 DeleteOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization.api.mdx) instead.
+         *
+         * Deletes the organization and all its resources (Users, Projects, Grants to and from the org). Users of this organization will not be able to log in.
+         */
         readonly removeOrg: {
             readonly name: "RemoveOrg";
             readonly requestType: MessageFns<RemoveOrgRequest>;
@@ -5194,6 +5333,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * List IAM Members
+         *
+         * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the instance level, matching the search queries. The search queries will be AND linked.
+         */
         readonly listIAMMembers: {
             readonly name: "ListIAMMembers";
             readonly requestType: MessageFns<ListIAMMembersRequest>;
@@ -5209,8 +5355,11 @@ export declare const AdminServiceDefinition: {
             };
         };
         /**
-         * Adds a user to the membership list of ZITADEL with the given roles
-         * undefined roles will be dropped
+         * Add IAM Member
+         *
+         * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list with one or multiple roles.
          */
         readonly addIAMMember: {
             readonly name: "AddIAMMember";
@@ -5226,6 +5375,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update IAM Member
+         *
+         * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+         */
         readonly updateIAMMember: {
             readonly name: "UpdateIAMMember";
             readonly requestType: MessageFns<UpdateIAMMemberRequest>;
@@ -5240,6 +5396,13 @@ export declare const AdminServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove IAM Member
+         *
+         * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an instance level. The user can still have roles on another level (organization, project).
+         */
         readonly removeIAMMember: {
             readonly name: "RemoveIAMMember";
             readonly requestType: MessageFns<RemoveIAMMemberRequest>;
@@ -5437,10 +5600,45 @@ export interface AdminServiceImplementation<CallContextExt = {}> {
     getAllowedLanguages(request: GetAllowedLanguagesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetAllowedLanguagesResponse>>;
     setDefaultLanguage(request: SetDefaultLanguageRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetDefaultLanguageResponse>>;
     getDefaultLanguage(request: GetDefaultLanguageRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetDefaultLanguageResponse>>;
+    /**
+     * Get My Instance
+     *
+     * Deprecated: use [instance service v2 GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead.
+     *
+     * Returns the details about the current instance such as the name, version, domains, etc.
+     */
     getMyInstance(request: GetMyInstanceRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetMyInstanceResponse>>;
+    /**
+     * List Instance Domains
+     *
+     * Deprecated: use [instance service v2 GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead.
+     *
+     * Returns a list of domains that are configured for this ZITADEL instance. These domains are the URLs where ZITADEL is running.
+     */
     listInstanceDomains(request: ListInstanceDomainsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListInstanceDomainsResponse>>;
+    /**
+     * List Instance Trusted Domains
+     *
+     * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-trusted-domains.api.mdx) instead.
+     *
+     * Returns a list of domains that are configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+     */
     listInstanceTrustedDomains(request: ListInstanceTrustedDomainsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListInstanceTrustedDomainsResponse>>;
+    /**
+     * Add an Instance Trusted Domain
+     *
+     * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-add-trusted-domain.api.mdx) instead.
+     *
+     * Add a domain to the list configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+     */
     addInstanceTrustedDomain(request: AddInstanceTrustedDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddInstanceTrustedDomainResponse>>;
+    /**
+     * Remove an Instance Trusted Domain
+     *
+     * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-remove-trusted-domain.api.mdx) instead.
+     *
+     * Removes a domain from the list configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+     */
     removeInstanceTrustedDomain(request: RemoveInstanceTrustedDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveInstanceTrustedDomainResponse>>;
     listSecretGenerators(request: ListSecretGeneratorsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListSecretGeneratorsResponse>>;
     getSecretGenerator(request: GetSecretGeneratorRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetSecretGeneratorResponse>>;
@@ -5563,12 +5761,54 @@ export interface AdminServiceImplementation<CallContextExt = {}> {
     getLogNotificationProvider(request: GetLogNotificationProviderRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetLogNotificationProviderResponse>>;
     getSecurityPolicy(request: GetSecurityPolicyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetSecurityPolicyResponse>>;
     setSecurityPolicy(request: SetSecurityPolicyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetSecurityPolicyResponse>>;
+    /**
+     * Get Organization By ID
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Returns an organization by its ID. Make sure the user has the permissions to access the organization.
+     */
     getOrgByID(request: GetOrgByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetOrgByIDResponse>>;
+    /**
+     * Is Organization Unique
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Checks if an organization with the searched parameters already exists or not.
+     */
     isOrgUnique(request: IsOrgUniqueRequest, context: CallContext & CallContextExt): Promise<DeepPartial<IsOrgUniqueResponse>>;
     setDefaultOrg(request: SetDefaultOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetDefaultOrgResponse>>;
+    /**
+     * Get Default Organization
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Get the default organization of the ZITADEL instance. If no specific organization is given on the register form, a user will be registered to the default organization.
+     */
     getDefaultOrg(request: GetDefaultOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetDefaultOrgResponse>>;
+    /**
+     * Search Organizations
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Returns a list of organizations that match the requesting filters. All filters are applied with an AND condition.
+     */
     listOrgs(request: ListOrgsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgsResponse>>;
+    /**
+     * Setup Organization
+     *
+     * Deprecated: use [organization service v2 CreateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-create-organization.api.mdx) instead.
+     *
+     * Create a new organization with an administrative user. If no specific roles are sent for the first user, the user will get the role ORG_OWNER.
+     */
     setUpOrg(request: SetUpOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetUpOrgResponse>>;
+    /**
+     * Remove Organization
+     *
+     * Deprecated: use [organization service v2 DeleteOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization.api.mdx) instead.
+     *
+     * Deletes the organization and all its resources (Users, Projects, Grants to and from the org). Users of this organization will not be able to log in.
+     */
     removeOrg(request: RemoveOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveOrgResponse>>;
     getIDPByID(request: GetIDPByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetIDPByIDResponse>>;
     listIDPs(request: ListIDPsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListIDPsResponse>>;
@@ -5732,13 +5972,37 @@ export interface AdminServiceImplementation<CallContextExt = {}> {
     setCustomLoginText(request: SetCustomLoginTextsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetCustomLoginTextsResponse>>;
     resetCustomLoginTextToDefault(request: ResetCustomLoginTextsToDefaultRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ResetCustomLoginTextsToDefaultResponse>>;
     listIAMMemberRoles(request: ListIAMMemberRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListIAMMemberRolesResponse>>;
+    /**
+     * List IAM Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the instance level, matching the search queries. The search queries will be AND linked.
+     */
     listIAMMembers(request: ListIAMMembersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListIAMMembersResponse>>;
     /**
-     * Adds a user to the membership list of ZITADEL with the given roles
-     * undefined roles will be dropped
+     * Add IAM Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list with one or multiple roles.
      */
     addIAMMember(request: AddIAMMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddIAMMemberResponse>>;
+    /**
+     * Update IAM Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateIAMMember(request: UpdateIAMMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateIAMMemberResponse>>;
+    /**
+     * Remove IAM Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an instance level. The user can still have roles on another level (organization, project).
+     */
     removeIAMMember(request: RemoveIAMMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveIAMMemberResponse>>;
     listViews(request: ListViewsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListViewsResponse>>;
     listFailedEvents(request: ListFailedEventsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListFailedEventsResponse>>;
@@ -5767,10 +6031,45 @@ export interface AdminServiceClient<CallOptionsExt = {}> {
     getAllowedLanguages(request: DeepPartial<GetAllowedLanguagesRequest>, options?: CallOptions & CallOptionsExt): Promise<GetAllowedLanguagesResponse>;
     setDefaultLanguage(request: DeepPartial<SetDefaultLanguageRequest>, options?: CallOptions & CallOptionsExt): Promise<SetDefaultLanguageResponse>;
     getDefaultLanguage(request: DeepPartial<GetDefaultLanguageRequest>, options?: CallOptions & CallOptionsExt): Promise<GetDefaultLanguageResponse>;
+    /**
+     * Get My Instance
+     *
+     * Deprecated: use [instance service v2 GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead.
+     *
+     * Returns the details about the current instance such as the name, version, domains, etc.
+     */
     getMyInstance(request: DeepPartial<GetMyInstanceRequest>, options?: CallOptions & CallOptionsExt): Promise<GetMyInstanceResponse>;
+    /**
+     * List Instance Domains
+     *
+     * Deprecated: use [instance service v2 GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead.
+     *
+     * Returns a list of domains that are configured for this ZITADEL instance. These domains are the URLs where ZITADEL is running.
+     */
     listInstanceDomains(request: DeepPartial<ListInstanceDomainsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListInstanceDomainsResponse>;
+    /**
+     * List Instance Trusted Domains
+     *
+     * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-trusted-domains.api.mdx) instead.
+     *
+     * Returns a list of domains that are configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+     */
     listInstanceTrustedDomains(request: DeepPartial<ListInstanceTrustedDomainsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListInstanceTrustedDomainsResponse>;
+    /**
+     * Add an Instance Trusted Domain
+     *
+     * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-add-trusted-domain.api.mdx) instead.
+     *
+     * Add a domain to the list configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+     */
     addInstanceTrustedDomain(request: DeepPartial<AddInstanceTrustedDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<AddInstanceTrustedDomainResponse>;
+    /**
+     * Remove an Instance Trusted Domain
+     *
+     * Deprecated: use [instance service v2 ListTrustedDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-remove-trusted-domain.api.mdx) instead.
+     *
+     * Removes a domain from the list configured for this ZITADEL instance. These domains are trusted to be used as public hosts.
+     */
     removeInstanceTrustedDomain(request: DeepPartial<RemoveInstanceTrustedDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveInstanceTrustedDomainResponse>;
     listSecretGenerators(request: DeepPartial<ListSecretGeneratorsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListSecretGeneratorsResponse>;
     getSecretGenerator(request: DeepPartial<GetSecretGeneratorRequest>, options?: CallOptions & CallOptionsExt): Promise<GetSecretGeneratorResponse>;
@@ -5893,12 +6192,54 @@ export interface AdminServiceClient<CallOptionsExt = {}> {
     getLogNotificationProvider(request: DeepPartial<GetLogNotificationProviderRequest>, options?: CallOptions & CallOptionsExt): Promise<GetLogNotificationProviderResponse>;
     getSecurityPolicy(request: DeepPartial<GetSecurityPolicyRequest>, options?: CallOptions & CallOptionsExt): Promise<GetSecurityPolicyResponse>;
     setSecurityPolicy(request: DeepPartial<SetSecurityPolicyRequest>, options?: CallOptions & CallOptionsExt): Promise<SetSecurityPolicyResponse>;
+    /**
+     * Get Organization By ID
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Returns an organization by its ID. Make sure the user has the permissions to access the organization.
+     */
     getOrgByID(request: DeepPartial<GetOrgByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetOrgByIDResponse>;
+    /**
+     * Is Organization Unique
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Checks if an organization with the searched parameters already exists or not.
+     */
     isOrgUnique(request: DeepPartial<IsOrgUniqueRequest>, options?: CallOptions & CallOptionsExt): Promise<IsOrgUniqueResponse>;
     setDefaultOrg(request: DeepPartial<SetDefaultOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<SetDefaultOrgResponse>;
+    /**
+     * Get Default Organization
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Get the default organization of the ZITADEL instance. If no specific organization is given on the register form, a user will be registered to the default organization.
+     */
     getDefaultOrg(request: DeepPartial<GetDefaultOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<GetDefaultOrgResponse>;
+    /**
+     * Search Organizations
+     *
+     * Deprecated: use [organization service v2 ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Returns a list of organizations that match the requesting filters. All filters are applied with an AND condition.
+     */
     listOrgs(request: DeepPartial<ListOrgsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgsResponse>;
+    /**
+     * Setup Organization
+     *
+     * Deprecated: use [organization service v2 CreateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-create-organization.api.mdx) instead.
+     *
+     * Create a new organization with an administrative user. If no specific roles are sent for the first user, the user will get the role ORG_OWNER.
+     */
     setUpOrg(request: DeepPartial<SetUpOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<SetUpOrgResponse>;
+    /**
+     * Remove Organization
+     *
+     * Deprecated: use [organization service v2 DeleteOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization.api.mdx) instead.
+     *
+     * Deletes the organization and all its resources (Users, Projects, Grants to and from the org). Users of this organization will not be able to log in.
+     */
     removeOrg(request: DeepPartial<RemoveOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveOrgResponse>;
     getIDPByID(request: DeepPartial<GetIDPByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetIDPByIDResponse>;
     listIDPs(request: DeepPartial<ListIDPsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListIDPsResponse>;
@@ -6062,13 +6403,37 @@ export interface AdminServiceClient<CallOptionsExt = {}> {
     setCustomLoginText(request: DeepPartial<SetCustomLoginTextsRequest>, options?: CallOptions & CallOptionsExt): Promise<SetCustomLoginTextsResponse>;
     resetCustomLoginTextToDefault(request: DeepPartial<ResetCustomLoginTextsToDefaultRequest>, options?: CallOptions & CallOptionsExt): Promise<ResetCustomLoginTextsToDefaultResponse>;
     listIAMMemberRoles(request: DeepPartial<ListIAMMemberRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListIAMMemberRolesResponse>;
+    /**
+     * List IAM Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the instance level, matching the search queries. The search queries will be AND linked.
+     */
     listIAMMembers(request: DeepPartial<ListIAMMembersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListIAMMembersResponse>;
     /**
-     * Adds a user to the membership list of ZITADEL with the given roles
-     * undefined roles will be dropped
+     * Add IAM Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list with one or multiple roles.
      */
     addIAMMember(request: DeepPartial<AddIAMMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<AddIAMMemberResponse>;
+    /**
+     * Update IAM Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateIAMMember(request: DeepPartial<UpdateIAMMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateIAMMemberResponse>;
+    /**
+     * Remove IAM Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an instance level. The user can still have roles on another level (organization, project).
+     */
     removeIAMMember(request: DeepPartial<RemoveIAMMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveIAMMemberResponse>;
     listViews(request: DeepPartial<ListViewsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListViewsResponse>;
     listFailedEvents(request: DeepPartial<ListFailedEventsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListFailedEventsResponse>;

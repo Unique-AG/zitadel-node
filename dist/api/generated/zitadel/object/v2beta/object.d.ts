@@ -67,6 +67,8 @@ export interface Details {
     changeDate: Date | undefined;
     /** resource_owner is the organization or instance_id an object belongs to */
     resourceOwner: string;
+    /** creation_date is the timestamp where the first operation on the object was made */
+    creationDate: Date | undefined;
 }
 export interface ListDetails {
     totalResult: Long;

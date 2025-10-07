@@ -9,6 +9,8 @@ export declare const protobufPackage = "zitadel.org.v2";
 export interface AddOrganizationRequest {
     name: string;
     admins: AddOrganizationRequest_Admin[];
+    /** optionally set your own id unique for the organization. */
+    orgId?: string | undefined;
 }
 export interface AddOrganizationRequest_Admin {
     userId?: string | undefined;

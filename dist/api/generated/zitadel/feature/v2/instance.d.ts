@@ -1,21 +1,20 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
 import { Details } from "../../object/v2/object.js";
-import { FeatureFlag, ImprovedPerformance, ImprovedPerformanceFeatureFlag } from "./feature.js";
+import { FeatureFlag, ImprovedPerformance, ImprovedPerformanceFeatureFlag, LoginV2, LoginV2FeatureFlag } from "./feature.js";
 export declare const protobufPackage = "zitadel.feature.v2";
 export interface SetInstanceFeaturesRequest {
     loginDefaultOrg?: boolean | undefined;
-    oidcTriggerIntrospectionProjections?: boolean | undefined;
-    oidcLegacyIntrospection?: boolean | undefined;
     userSchema?: boolean | undefined;
     oidcTokenExchange?: boolean | undefined;
-    actions?: boolean | undefined;
     improvedPerformance: ImprovedPerformance[];
-    webKey?: boolean | undefined;
     debugOidcParentError?: boolean | undefined;
     oidcSingleV1SessionTermination?: boolean | undefined;
-    disableUserTokenEvent?: boolean | undefined;
     enableBackChannelLogout?: boolean | undefined;
+    loginV2?: LoginV2 | undefined;
+    permissionCheckV2?: boolean | undefined;
+    consoleUseV2UserApi?: boolean | undefined;
+    enableRelationalTables?: boolean | undefined;
 }
 export interface SetInstanceFeaturesResponse {
     details: Details | undefined;
@@ -31,17 +30,16 @@ export interface GetInstanceFeaturesRequest {
 export interface GetInstanceFeaturesResponse {
     details: Details | undefined;
     loginDefaultOrg: FeatureFlag | undefined;
-    oidcTriggerIntrospectionProjections: FeatureFlag | undefined;
-    oidcLegacyIntrospection: FeatureFlag | undefined;
     userSchema: FeatureFlag | undefined;
     oidcTokenExchange: FeatureFlag | undefined;
-    actions: FeatureFlag | undefined;
     improvedPerformance: ImprovedPerformanceFeatureFlag | undefined;
-    webKey: FeatureFlag | undefined;
     debugOidcParentError: FeatureFlag | undefined;
     oidcSingleV1SessionTermination: FeatureFlag | undefined;
-    disableUserTokenEvent: FeatureFlag | undefined;
     enableBackChannelLogout: FeatureFlag | undefined;
+    loginV2: LoginV2FeatureFlag | undefined;
+    permissionCheckV2: FeatureFlag | undefined;
+    consoleUseV2UserApi: FeatureFlag | undefined;
+    enableRelationalTables: FeatureFlag | undefined;
 }
 export declare const SetInstanceFeaturesRequest: MessageFns<SetInstanceFeaturesRequest>;
 export declare const SetInstanceFeaturesResponse: MessageFns<SetInstanceFeaturesResponse>;

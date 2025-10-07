@@ -4,7 +4,7 @@ import { KeyType } from "./auth_n_key.js";
 import { IDPUserLink } from "./idp.js";
 import { AddAPIAppRequest, AddCustomLabelPolicyRequest, AddCustomLockoutPolicyRequest, AddCustomLoginPolicyRequest, AddCustomPasswordComplexityPolicyRequest, AddCustomPrivacyPolicyRequest, AddIDPToLoginPolicyRequest, AddMachineUserRequest, AddMultiFactorToLoginPolicyRequest, AddOIDCAppRequest, AddOrgJWTIDPRequest, AddOrgMemberRequest, AddOrgOIDCIDPRequest, AddOrgRequest, AddProjectGrantMemberRequest, AddProjectGrantRequest, AddProjectMemberRequest, AddProjectRequest, AddProjectRoleRequest, AddSecondFactorToLoginPolicyRequest, AddUserGrantRequest, CreateActionRequest, ImportHumanUserRequest, SetCustomDomainClaimedMessageTextRequest, SetCustomInitMessageTextRequest, SetCustomInviteUserMessageTextRequest, SetCustomLoginTextsRequest, SetCustomPasswordlessRegistrationMessageTextRequest, SetCustomPasswordResetMessageTextRequest, SetCustomVerifyEmailMessageTextRequest, SetCustomVerifyPhoneMessageTextRequest, SetUserMetadataRequest } from "./management.js";
 import { Domain } from "./org.js";
-import { Gender } from "./user.js";
+import { Gender, UserState } from "./user.js";
 export declare const protobufPackage = "zitadel.v1.v1";
 export declare enum FlowType {
     FLOW_TYPE_UNSPECIFIED = 0,
@@ -143,10 +143,12 @@ export interface DataOIDCApplication {
 export interface DataHumanUser {
     userId: string;
     user: ImportHumanUserRequest | undefined;
+    state: UserState;
 }
 export interface DataMachineUser {
     userId: string;
     user: AddMachineUserRequest | undefined;
+    state: UserState;
 }
 export interface DataAction {
     actionId: string;

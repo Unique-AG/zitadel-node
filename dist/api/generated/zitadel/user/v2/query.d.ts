@@ -1,5 +1,6 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
+import { MetadataKeyFilter, MetadataValueFilter } from "../../metadata/v2/metadata.js";
 import { TextQueryMethod } from "../../object/v2/object.js";
 import { UserState } from "./user.js";
 export declare const protobufPackage = "zitadel.user.v2";
@@ -42,6 +43,9 @@ export interface SearchQuery {
     notQuery?: NotQuery | undefined;
     inUserEmailsQuery?: InUserEmailsQuery | undefined;
     organizationIdQuery?: OrganizationIdQuery | undefined;
+    phoneQuery?: PhoneQuery | undefined;
+    metadataKeyFilter?: MetadataKeyFilter | undefined;
+    metadataValueFilter?: MetadataValueFilter | undefined;
 }
 /** Connect multiple sub-condition with and OR operator. */
 export interface OrQuery {
@@ -89,6 +93,11 @@ export interface EmailQuery {
     emailAddress: string;
     method: TextQueryMethod;
 }
+/** Query for users with a specific phone. */
+export interface PhoneQuery {
+    number: string;
+    method: TextQueryMethod;
+}
 /** Query for users with a specific state. */
 export interface LoginNameQuery {
     loginName: string;
@@ -121,6 +130,7 @@ export declare const LastNameQuery: MessageFns<LastNameQuery>;
 export declare const NickNameQuery: MessageFns<NickNameQuery>;
 export declare const DisplayNameQuery: MessageFns<DisplayNameQuery>;
 export declare const EmailQuery: MessageFns<EmailQuery>;
+export declare const PhoneQuery: MessageFns<PhoneQuery>;
 export declare const LoginNameQuery: MessageFns<LoginNameQuery>;
 export declare const StateQuery: MessageFns<StateQuery>;
 export declare const TypeQuery: MessageFns<TypeQuery>;

@@ -18,14 +18,9 @@ export declare function sourceToJSON(object: Source): string;
 export declare enum ImprovedPerformance {
     IMPROVED_PERFORMANCE_UNSPECIFIED = 0,
     /**
-     * IMPROVED_PERFORMANCE_ORG_BY_ID - Uses the eventstore to query the org by id
-     * instead of the sql table.
-     */
-    IMPROVED_PERFORMANCE_ORG_BY_ID = 1,
-    /**
      * IMPROVED_PERFORMANCE_PROJECT_GRANT - Improves performance on write side by using
      * optimized processes to query data to determine
-     * correctnes of data.
+     * correctness of data.
      */
     IMPROVED_PERFORMANCE_PROJECT_GRANT = 2,
     IMPROVED_PERFORMANCE_PROJECT = 3,

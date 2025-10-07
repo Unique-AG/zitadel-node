@@ -1,12 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.ServiceAccount = void 0;
-const jose_1 = require("jose");
-const node_rsa_1 = __importDefault(require("node-rsa"));
-const openid_client_1 = require("openid-client");
+import { importPKCS8, SignJWT } from 'jose';
+import NodeRSA from 'node-rsa';
+import { Issuer } from 'openid-client';
 /**
  * A service account for [ZITADEL](https://zitadel.ch/). The service
  * account can be loaded from a valid JSON string or from a file containing the JSON string.
@@ -23,7 +17,7 @@ const openid_client_1 = require("openid-client");
  * - Give the service user the relevant authorization (e.g. ORG_OWNER or access to a specific project)
  * - Create a "key" in the account detail page of the service user and download it
  */
-class ServiceAccount {
+export class ServiceAccount {
     userId;
     keyId;
     key;
@@ -123,7 +117,7 @@ class ServiceAccount {
      */
     async authenticate(audience, options) {
         const { default: axios } = await import('axios');
-        const issuer = await openid_client_1.Issuer.discover(audience);
+        const issuer = await Issuer.discover(audience);
         const tokenEndpoint = issuer.metadata.token_endpoint ?? 'N/A';
         const jwt = await this.getSignedJwt(audience);
         const response = await axios.post(tokenEndpoint, new URLSearchParams({
@@ -140,9 +134,9 @@ class ServiceAccount {
         return response.data.access_token;
     }
     async getSignedJwt(audience) {
-        const rsa = new node_rsa_1.default(this.key);
-        const key = await (0, jose_1.importPKCS8)(rsa.exportKey('pkcs8-private-pem'), 'RSA256');
-        return await new jose_1.SignJWT({})
+        const rsa = new NodeRSA(this.key);
+        const key = await importPKCS8(rsa.exportKey('pkcs8-private-pem'), 'RSA256');
+        return await new SignJWT({})
             .setProtectedHeader({ kid: this.keyId, alg: 'RS256' })
             .setIssuedAt()
             .setExpirationTime('1h')
@@ -152,7 +146,6 @@ class ServiceAccount {
             .sign(key);
     }
 }
-exports.ServiceAccount = ServiceAccount;
 const createScopes = ({ additionalScopes = [], apiAccess = false, projectAudiences = [], roles = [], }) => [
     'openid',
     apiAccess ? 'urn:zitadel:iam:org:project:id:zitadel:aud' : undefined,

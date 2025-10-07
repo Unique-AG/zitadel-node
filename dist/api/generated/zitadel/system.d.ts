@@ -5,7 +5,7 @@ import { Duration } from "../google/protobuf/duration.js";
 import { KeyType } from "./auth_n_key.js";
 import { InstanceFeature } from "./feature.js";
 import { Domain, DomainFieldName, DomainSearchQuery, FieldName, Instance, InstanceDetail, Query } from "./instance.js";
-import { Member, SearchQuery } from "./member.js";
+import { Member, MemberFieldColumnName, SearchQuery } from "./member.js";
 import { ListDetails, ListQuery, ObjectDetails } from "./object.js";
 import { Notification, Unit } from "./quota.js";
 export declare const protobufPackage = "zitadel.system.v1";
@@ -125,6 +125,7 @@ export interface ListIAMMembersRequest {
     query: ListQuery | undefined;
     instanceId: string;
     queries: SearchQuery[];
+    sortingColumn: MemberFieldColumnName;
 }
 export interface ListIAMMembersResponse {
     details: ListDetails | undefined;
@@ -387,7 +388,11 @@ export declare const SystemServiceDefinition: {
                 };
             };
         };
-        /** Returns a list of ZITADEL instances */
+        /**
+         * Returns a list of ZITADEL instances
+         *
+         * Deprecated: Use [ListInstances](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-instances.api.mdx) instead to list instances
+         */
         readonly listInstances: {
             readonly name: "ListInstances";
             readonly requestType: MessageFns<ListInstancesRequest>;
@@ -396,12 +401,17 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
             };
         };
-        /** Returns the detail of an instance */
+        /**
+         * Returns the detail of an instance
+         *
+         * Deprecated: Use [GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead to get the details of the instance in context
+         */
         readonly getInstance: {
             readonly name: "GetInstance";
             readonly requestType: MessageFns<GetInstanceRequest>;
@@ -410,6 +420,7 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
@@ -428,12 +439,17 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
             };
         };
-        /** Updates name of an existing instance */
+        /**
+         * Updates name of an existing instance
+         *
+         * Deprecated: Use [UpdateInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-update-instance.api.mdx) instead to update the name of the instance in context
+         */
         readonly updateInstance: {
             readonly name: "UpdateInstance";
             readonly requestType: MessageFns<UpdateInstanceRequest>;
@@ -442,6 +458,7 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
@@ -467,6 +484,8 @@ export declare const SystemServiceDefinition: {
         /**
          * Removes an instance
          * This might take some time
+         *
+         * Deprecated: Use [DeleteInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-delete-instance.api.mdx) instead to delete an instance
          */
         readonly removeInstance: {
             readonly name: "RemoveInstance";
@@ -476,6 +495,7 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
@@ -499,7 +519,11 @@ export declare const SystemServiceDefinition: {
                 };
             };
         };
-        /** Checks if a domain exists */
+        /**
+         * Checks if a domain exists
+         *
+         * Deprecated: Use [ListCustomDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-custom-domains.api.mdx) instead to check existence of an instance
+         */
         readonly existsDomain: {
             readonly name: "ExistsDomain";
             readonly requestType: MessageFns<ExistsDomainRequest>;
@@ -508,15 +532,18 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
             };
         };
         /**
-         * Returns the custom domains of an instance
-         * Checks if a domain exists
-         * Deprecated: Use the Admin APIs ListInstanceDomains on the admin API instead
+         * List Domains
+         *
+         * Deprecated: use [instance service v2 ListCustomDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-custom-domains.api.mdx) instead.
+         *
+         * Returns the custom domains of an instance.
          */
         readonly listDomains: {
             readonly name: "ListDomains";
@@ -526,12 +553,17 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
             };
         };
-        /** Adds a domain to an instance */
+        /**
+         * Adds a domain to an instance
+         *
+         * Deprecated: Use [AddCustomDomain](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-add-custom-domain.api.mdx) instead to add a custom domain to the instance in context
+         */
         readonly addDomain: {
             readonly name: "AddDomain";
             readonly requestType: MessageFns<AddDomainRequest>;
@@ -540,12 +572,17 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
             };
         };
-        /** Removes the domain of an instance */
+        /**
+         * Removes the domain of an instance
+         *
+         * Deprecated: Use [RemoveDomain](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-remove-custom-domain.api.mdx) instead to remove a custom domain from the instance in context
+         */
         readonly removeDomain: {
             readonly name: "RemoveDomain";
             readonly requestType: MessageFns<RemoveDomainRequest>;
@@ -554,6 +591,7 @@ export declare const SystemServiceDefinition: {
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
                     readonly 400002: readonly [Buffer];
                     readonly 578365826: readonly [Buffer];
                 };
@@ -771,9 +809,17 @@ export interface SystemServiceImplementation<CallContextExt = {}> {
      * It respondes as soon as ZITADEL started
      */
     healthz(request: HealthzRequest, context: CallContext & CallContextExt): Promise<DeepPartial<HealthzResponse>>;
-    /** Returns a list of ZITADEL instances */
+    /**
+     * Returns a list of ZITADEL instances
+     *
+     * Deprecated: Use [ListInstances](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-instances.api.mdx) instead to list instances
+     */
     listInstances(request: ListInstancesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListInstancesResponse>>;
-    /** Returns the detail of an instance */
+    /**
+     * Returns the detail of an instance
+     *
+     * Deprecated: Use [GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead to get the details of the instance in context
+     */
     getInstance(request: GetInstanceRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetInstanceResponse>>;
     /**
      * Deprecated: Use CreateInstance instead
@@ -781,7 +827,11 @@ export interface SystemServiceImplementation<CallContextExt = {}> {
      * This might take some time
      */
     addInstance(request: AddInstanceRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddInstanceResponse>>;
-    /** Updates name of an existing instance */
+    /**
+     * Updates name of an existing instance
+     *
+     * Deprecated: Use [UpdateInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-update-instance.api.mdx) instead to update the name of the instance in context
+     */
     updateInstance(request: UpdateInstanceRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateInstanceResponse>>;
     /**
      * Creates a new instance with all needed setup data
@@ -791,6 +841,8 @@ export interface SystemServiceImplementation<CallContextExt = {}> {
     /**
      * Removes an instance
      * This might take some time
+     *
+     * Deprecated: Use [DeleteInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-delete-instance.api.mdx) instead to delete an instance
      */
     removeInstance(request: RemoveInstanceRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveInstanceResponse>>;
     /**
@@ -799,17 +851,31 @@ export interface SystemServiceImplementation<CallContextExt = {}> {
      * Deprecated: Use the Admin APIs ListIAMMembers instead
      */
     listIAMMembers(request: ListIAMMembersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListIAMMembersResponse>>;
-    /** Checks if a domain exists */
+    /**
+     * Checks if a domain exists
+     *
+     * Deprecated: Use [ListCustomDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-custom-domains.api.mdx) instead to check existence of an instance
+     */
     existsDomain(request: ExistsDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ExistsDomainResponse>>;
     /**
-     * Returns the custom domains of an instance
-     * Checks if a domain exists
-     * Deprecated: Use the Admin APIs ListInstanceDomains on the admin API instead
+     * List Domains
+     *
+     * Deprecated: use [instance service v2 ListCustomDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-custom-domains.api.mdx) instead.
+     *
+     * Returns the custom domains of an instance.
      */
     listDomains(request: ListDomainsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListDomainsResponse>>;
-    /** Adds a domain to an instance */
+    /**
+     * Adds a domain to an instance
+     *
+     * Deprecated: Use [AddCustomDomain](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-add-custom-domain.api.mdx) instead to add a custom domain to the instance in context
+     */
     addDomain(request: AddDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddDomainResponse>>;
-    /** Removes the domain of an instance */
+    /**
+     * Removes the domain of an instance
+     *
+     * Deprecated: Use [RemoveDomain](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-remove-custom-domain.api.mdx) instead to remove a custom domain from the instance in context
+     */
     removeDomain(request: RemoveDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveDomainResponse>>;
     /** Sets the primary domain of an instance */
     setPrimaryDomain(request: SetPrimaryDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetPrimaryDomainResponse>>;
@@ -868,9 +934,17 @@ export interface SystemServiceClient<CallOptionsExt = {}> {
      * It respondes as soon as ZITADEL started
      */
     healthz(request: DeepPartial<HealthzRequest>, options?: CallOptions & CallOptionsExt): Promise<HealthzResponse>;
-    /** Returns a list of ZITADEL instances */
+    /**
+     * Returns a list of ZITADEL instances
+     *
+     * Deprecated: Use [ListInstances](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-instances.api.mdx) instead to list instances
+     */
     listInstances(request: DeepPartial<ListInstancesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListInstancesResponse>;
-    /** Returns the detail of an instance */
+    /**
+     * Returns the detail of an instance
+     *
+     * Deprecated: Use [GetInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-get-instance.api.mdx) instead to get the details of the instance in context
+     */
     getInstance(request: DeepPartial<GetInstanceRequest>, options?: CallOptions & CallOptionsExt): Promise<GetInstanceResponse>;
     /**
      * Deprecated: Use CreateInstance instead
@@ -878,7 +952,11 @@ export interface SystemServiceClient<CallOptionsExt = {}> {
      * This might take some time
      */
     addInstance(request: DeepPartial<AddInstanceRequest>, options?: CallOptions & CallOptionsExt): Promise<AddInstanceResponse>;
-    /** Updates name of an existing instance */
+    /**
+     * Updates name of an existing instance
+     *
+     * Deprecated: Use [UpdateInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-update-instance.api.mdx) instead to update the name of the instance in context
+     */
     updateInstance(request: DeepPartial<UpdateInstanceRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateInstanceResponse>;
     /**
      * Creates a new instance with all needed setup data
@@ -888,6 +966,8 @@ export interface SystemServiceClient<CallOptionsExt = {}> {
     /**
      * Removes an instance
      * This might take some time
+     *
+     * Deprecated: Use [DeleteInstance](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-delete-instance.api.mdx) instead to delete an instance
      */
     removeInstance(request: DeepPartial<RemoveInstanceRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveInstanceResponse>;
     /**
@@ -896,17 +976,31 @@ export interface SystemServiceClient<CallOptionsExt = {}> {
      * Deprecated: Use the Admin APIs ListIAMMembers instead
      */
     listIAMMembers(request: DeepPartial<ListIAMMembersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListIAMMembersResponse>;
-    /** Checks if a domain exists */
+    /**
+     * Checks if a domain exists
+     *
+     * Deprecated: Use [ListCustomDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-custom-domains.api.mdx) instead to check existence of an instance
+     */
     existsDomain(request: DeepPartial<ExistsDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<ExistsDomainResponse>;
     /**
-     * Returns the custom domains of an instance
-     * Checks if a domain exists
-     * Deprecated: Use the Admin APIs ListInstanceDomains on the admin API instead
+     * List Domains
+     *
+     * Deprecated: use [instance service v2 ListCustomDomains](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-list-custom-domains.api.mdx) instead.
+     *
+     * Returns the custom domains of an instance.
      */
     listDomains(request: DeepPartial<ListDomainsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListDomainsResponse>;
-    /** Adds a domain to an instance */
+    /**
+     * Adds a domain to an instance
+     *
+     * Deprecated: Use [AddCustomDomain](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-add-custom-domain.api.mdx) instead to add a custom domain to the instance in context
+     */
     addDomain(request: DeepPartial<AddDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<AddDomainResponse>;
-    /** Removes the domain of an instance */
+    /**
+     * Removes the domain of an instance
+     *
+     * Deprecated: Use [RemoveDomain](apis/resources/instance_service_v2/zitadel-instance-v-2-beta-instance-service-remove-custom-domain.api.mdx) instead to remove a custom domain from the instance in context
+     */
     removeDomain(request: DeepPartial<RemoveDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveDomainResponse>;
     /** Sets the primary domain of an instance */
     setPrimaryDomain(request: DeepPartial<SetPrimaryDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<SetPrimaryDomainResponse>;

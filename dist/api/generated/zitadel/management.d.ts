@@ -3,10 +3,10 @@ import Long from "long";
 import { type CallContext, type CallOptions } from "nice-grpc-common";
 import { Duration } from "../google/protobuf/duration.js";
 import { Action, ActionFieldName, ActionIDQuery, ActionNameQuery, ActionStateQuery, Flow, FlowType, TriggerType } from "./action.js";
-import { APIAuthMethodType, App, AppQuery, OIDCAppType, OIDCAuthMethodType, OIDCGrantType, OIDCResponseType, OIDCTokenType, OIDCVersion } from "./app.js";
+import { APIAuthMethodType, App, AppQuery, LoginVersion, OIDCAppType, OIDCAuthMethodType, OIDCGrantType, OIDCResponseType, OIDCTokenType, OIDCVersion } from "./app.js";
 import { Key, KeyType } from "./auth_n_key.js";
 import { Change, ChangeQuery } from "./change.js";
-import { AzureADTenant, IDP, IDPFieldName, IDPIDQuery, IDPLoginPolicyLink, IDPNameQuery, IDPOwnerType, IDPOwnerTypeQuery, IDPStylingType, IDPUserLink, LDAPAttributes, OIDCMappingField, Options, Provider, SAMLBinding, SAMLNameIDFormat } from "./idp.js";
+import { AzureADTenant, IDP, IDPFieldName, IDPIDQuery, IDPLoginPolicyLink, IDPNameQuery, IDPOwnerType, IDPOwnerTypeQuery, IDPStylingType, IDPUserLink, LDAPAttributes, OIDCMappingField, Options, Provider, SAMLBinding, SAMLNameIDFormat, SAMLSignatureAlgorithm } from "./idp.js";
 import { Member, SearchQuery as SearchQuery1 } from "./member.js";
 import { LocalizedMessage } from "./message.js";
 import { Metadata, MetadataQuery } from "./metadata.js";
@@ -949,6 +949,7 @@ export interface AddOIDCAppRequest {
     additionalOrigins: string[];
     skipNativeAppSuccessPage: boolean;
     backChannelLogoutUri: string;
+    loginVersion: LoginVersion | undefined;
 }
 export interface AddOIDCAppResponse {
     appId: string;
@@ -963,6 +964,7 @@ export interface AddSAMLAppRequest {
     name: string;
     metadataXml?: Buffer | undefined;
     metadataUrl?: string | undefined;
+    loginVersion: LoginVersion | undefined;
 }
 export interface AddSAMLAppResponse {
     appId: string;
@@ -1005,6 +1007,7 @@ export interface UpdateOIDCAppConfigRequest {
     additionalOrigins: string[];
     skipNativeAppSuccessPage: boolean;
     backChannelLogoutUri: string;
+    loginVersion: LoginVersion | undefined;
 }
 export interface UpdateOIDCAppConfigResponse {
     details: ObjectDetails | undefined;
@@ -1014,6 +1017,7 @@ export interface UpdateSAMLAppConfigRequest {
     appId: string;
     metadataXml?: Buffer | undefined;
     metadataUrl?: string | undefined;
+    loginVersion: LoginVersion | undefined;
 }
 export interface UpdateSAMLAppConfigResponse {
     details: ObjectDetails | undefined;
@@ -2201,6 +2205,8 @@ export interface AddGenericOAuthProviderRequest {
     /** identifying attribute of the user in the response of the user_endpoint */
     idAttribute: string;
     providerOptions: Options | undefined;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OAuth2 flow. */
+    usePkce: boolean;
 }
 export interface AddGenericOAuthProviderResponse {
     details: ObjectDetails | undefined;
@@ -2219,6 +2225,8 @@ export interface UpdateGenericOAuthProviderRequest {
     /** identifying attribute of the user in the response of the user_endpoint */
     idAttribute: string;
     providerOptions: Options | undefined;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OAuth2 flow. */
+    usePkce: boolean;
 }
 export interface UpdateGenericOAuthProviderResponse {
     details: ObjectDetails | undefined;
@@ -2231,6 +2239,8 @@ export interface AddGenericOIDCProviderRequest {
     scopes: string[];
     providerOptions: Options | undefined;
     isIdTokenMapping: boolean;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OIDC flow. */
+    usePkce: boolean;
 }
 export interface AddGenericOIDCProviderResponse {
     details: ObjectDetails | undefined;
@@ -2246,6 +2256,8 @@ export interface UpdateGenericOIDCProviderRequest {
     scopes: string[];
     providerOptions: Options | undefined;
     isIdTokenMapping: boolean;
+    /** Enable the use of Proof Key for Code Exchange (PKCE) for the OIDC flow. */
+    usePkce: boolean;
 }
 export interface UpdateGenericOIDCProviderResponse {
     details: ObjectDetails | undefined;
@@ -2450,6 +2462,8 @@ export interface AddLDAPProviderRequest {
     timeout: Duration | undefined;
     attributes: LDAPAttributes | undefined;
     providerOptions: Options | undefined;
+    /** Root_ca is for self signing certificates for TLS connections to LDAP servers it is intended to be filled with a .pem file. */
+    rootCa: Buffer;
 }
 export interface AddLDAPProviderResponse {
     details: ObjectDetails | undefined;
@@ -2469,6 +2483,8 @@ export interface UpdateLDAPProviderRequest {
     timeout: Duration | undefined;
     attributes: LDAPAttributes | undefined;
     providerOptions: Options | undefined;
+    /** Root_ca is for self signing certificates for TLS connections to LDAP servers it is intended to be filled with a .pem file. */
+    rootCa: Buffer;
 }
 export interface UpdateLDAPProviderResponse {
     details: ObjectDetails | undefined;
@@ -2491,6 +2507,16 @@ export interface AddSAMLProviderRequest {
      * in case the nameid-format returned is `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`.
      */
     transientMappingAttributeName?: string | undefined;
+    /**
+     * Optionally enable federated logout. If enabled, ZITADEL will send a logout request to the identity provider,
+     * if the user terminates the session in ZITADEL. Be sure to provide a SLO endpoint as part of the metadata.
+     */
+    federatedLogoutEnabled?: boolean | undefined;
+    /**
+     * Specify a Signature Algorithm that should be used to sign SAML requests and responses.
+     * Can be used only if the `with_signed_request` option is set to true.
+     */
+    signatureAlgorithm: SAMLSignatureAlgorithm;
 }
 export interface AddSAMLProviderResponse {
     details: ObjectDetails | undefined;
@@ -2514,6 +2540,16 @@ export interface UpdateSAMLProviderRequest {
      * in case the nameid-format returned is `urn:oasis:names:tc:SAML:2.0:nameid-format:transient`.
      */
     transientMappingAttributeName?: string | undefined;
+    /**
+     * Optionally enable federated logout. If enabled, ZITADEL will send a logout request to the identity provider,
+     * if the user terminates the session in ZITADEL. Be sure to provide a SLO endpoint as part of the metadata.
+     */
+    federatedLogoutEnabled?: boolean | undefined;
+    /**
+     * Specify a Signature Algorithm that should be used to sign SAML requests and responses.
+     * Can be used only if the `with_signed_request` option is set to true.
+     */
+    signatureAlgorithm: SAMLSignatureAlgorithm;
 }
 export interface UpdateSAMLProviderResponse {
     details: ObjectDetails | undefined;
@@ -3343,7 +3379,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListUsers, with InUserIDQuery */
+        /**
+         * User by ID
+         *
+         * Deprecated: use [user service v2 ListUsers with InUserIDQuery](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+         *
+         * Returns the full user object (human or machine) including the profile, email, etc.
+         */
         readonly getUserByID: {
             readonly name: "GetUserByID";
             readonly requestType: MessageFns<GetUserByIDRequest>;
@@ -3358,7 +3400,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListUsers, with LoginNameQuery */
+        /**
+         * Get User by login name (globally)
+         *
+         * Deprecated: use [user service v2 ListUsers with LoginNameQuery](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+         *
+         * Get a user by login name searched over all organizations. The request only returns data if the login name matches exactly.
+         */
         readonly getUserByLoginNameGlobal: {
             readonly name: "GetUserByLoginNameGlobal";
             readonly requestType: MessageFns<GetUserByLoginNameGlobalRequest>;
@@ -3373,7 +3421,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListUsers */
+        /**
+         * Search Users
+         *
+         * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+         *
+         * Search for users within an organization. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination.
+         */
         readonly listUsers: {
             readonly name: "ListUsers";
             readonly requestType: MessageFns<ListUsersRequest>;
@@ -3402,7 +3456,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListUsers, is unique when no user is returned */
+        /**
+         * Check for existing user
+         *
+         * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead, is unique if no user returned.
+         *
+         * Returns if a user with the requested email or username is unique. So you can create the user.
+         */
         readonly isUserUnique: {
             readonly name: "IsUserUnique";
             readonly requestType: MessageFns<IsUserUniqueRequest>;
@@ -3417,7 +3477,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: use ImportHumanUser */
+        /**
+         * Create User (Human)
+         *
+         * Deprecated: use [user service v2 CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) instead.
+         *
+         * Create a new user with the type human. The newly created user will get an initialization email if either the email address is not marked as verified or no password is set. If a password is set the user will not be requested to set a new one on the first login.
+         */
         readonly addHumanUser: {
             readonly name: "AddHumanUser";
             readonly requestType: MessageFns<AddHumanUserRequest>;
@@ -3432,7 +3498,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 AddHumanUser */
+        /**
+         * Create/Import User (Human)
+         *
+         * Deprecated: use [user service v2 UpdateHumanUser](apis/resources/user_service_v2/user-service-update-human-user.api.mdx) instead.
+         *
+         * Create/import a new user with the type human. The newly created user will get an initialization email if either the email address is not marked as verified or no password is set. If a password is set the user will not be requested to set a new one on the first login.
+         */
         readonly importHumanUser: {
             readonly name: "ImportHumanUser";
             readonly requestType: MessageFns<ImportHumanUserRequest>;
@@ -3447,6 +3519,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create User (Machine)
+         *
+         * Deprecated: use [user service v2 CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) instead.
+         *
+         * Create a new user with the type machine for your API, service or device. These users are used for non-interactive authentication flows.
+         */
         readonly addMachineUser: {
             readonly name: "AddMachineUser";
             readonly requestType: MessageFns<AddMachineUserRequest>;
@@ -3461,7 +3540,15 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 DeactivateUser */
+        /**
+         * Deactivate User
+         *
+         * Deprecated: use [user service v2 DeactivateUser](apis/resources/user_service_v2/user-service-deactivate-user.api.mdx) instead.
+         *
+         * The state of the user will be changed to 'deactivated'. The user will not be able to log in anymore.
+         * The endpoint returns an error if the user is already in the state 'deactivated'.
+         * Use deactivate user when the user should not be able to use the account anymore, but you still need access to the user data.
+         */
         readonly deactivateUser: {
             readonly name: "DeactivateUser";
             readonly requestType: MessageFns<DeactivateUserRequest>;
@@ -3476,7 +3563,14 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ReactivateUser */
+        /**
+         * Deactivate User
+         *
+         * Deprecated: use [user service v2 ReactivateUser](apis/resources/user_service_v2/user-service-reactivate-user.api.mdx) instead.
+         *
+         * Reactivate a user with the state 'deactivated'. The user will be able to log in again afterward.
+         * The endpoint returns an error if the user is not in the state 'deactivated'.
+         */
         readonly reactivateUser: {
             readonly name: "ReactivateUser";
             readonly requestType: MessageFns<ReactivateUserRequest>;
@@ -3491,7 +3585,15 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 LockUser */
+        /**
+         * Lock User
+         *
+         * Deprecated: use [user service v2 LockUser](apis/resources/user_service_v2/user-service-lock-user.api.mdx) instead.
+         *
+         * The state of the user will be changed to 'locked'. The user will not be able to log in anymore.
+         * The endpoint returns an error if the user is already in the state 'locked'.
+         * Use this endpoint if the user should not be able to log in temporarily because of an event that happened (wrong password, etc.).
+         */
         readonly lockUser: {
             readonly name: "LockUser";
             readonly requestType: MessageFns<LockUserRequest>;
@@ -3506,7 +3608,14 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 UnlockUser */
+        /**
+         * Unlock User
+         *
+         * Deprecated: use [user service v2 UnlockUser](apis/resources/user_service_v2/user-service-unlock-user.api.mdx) instead.
+         *
+         * Unlock a user with the state 'locked'. The user will be able to log in again afterward.
+         * The endpoint returns an error if the user is not in the state 'locked'.
+         */
         readonly unlockUser: {
             readonly name: "UnlockUser";
             readonly requestType: MessageFns<UnlockUserRequest>;
@@ -3521,7 +3630,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemoveUser */
+        /**
+         * Unlock User
+         *
+         * Deprecated: use [user service v2 DeleteUser](apis/resources/user_service_v2/user-service-delete-user.api.mdx) instead.
+         *
+         * The state of the user will be changed to 'deleted'. The user will not be able to log in anymore. Endpoints requesting this user will return an error 'User not found.
+         */
         readonly removeUser: {
             readonly name: "RemoveUser";
             readonly requestType: MessageFns<RemoveUserRequest>;
@@ -3536,7 +3651,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 UpdateHumanUser */
+        /**
+         * Change user name
+         *
+         * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+         *
+         * Change the username of the user. Be aware that the user has to log in with the newly added username afterward.
+         */
         readonly updateUserName: {
             readonly name: "UpdateUserName";
             readonly requestType: MessageFns<UpdateUserNameRequest>;
@@ -3551,6 +3672,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Set User Metadata
+         *
+         * Deprecated: use [SetUserMetadata](apis/resources/user_service_v2/user-service-set-user-metadata.api.mdx) instead.
+         *
+         * This endpoint either adds or updates a metadata value for the requested key. Make sure the value is base64 encoded.
+         */
         readonly setUserMetadata: {
             readonly name: "SetUserMetadata";
             readonly requestType: MessageFns<SetUserMetadataRequest>;
@@ -3565,6 +3693,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Bulk Set User Metadata
+         *
+         * Deprecated: use [SetUserMetadata](apis/resources/user_service_v2/user-service-set-user-metadata.api.mdx) instead.
+         *
+         * Add or update multiple metadata values for a user. Make sure the values are base64 encoded.
+         */
         readonly bulkSetUserMetadata: {
             readonly name: "BulkSetUserMetadata";
             readonly requestType: MessageFns<BulkSetUserMetadataRequest>;
@@ -3579,6 +3714,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search User Metadata
+         *
+         * Deprecated: use [ListUserMetadata](apis/resources/user_service_v2/user-service-list-user-metadata.api.mdx) instead.
+         *
+         * Get the metadata of a user filtered by your query.
+         */
         readonly listUserMetadata: {
             readonly name: "ListUserMetadata";
             readonly requestType: MessageFns<ListUserMetadataRequest>;
@@ -3593,6 +3735,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get User Metadata By Key
+         *
+         * Deprecated: use [ListUserMetadata](apis/resources/user_service_v2/user-service-list-user-metadata.api.mdx) instead.
+         *
+         * Get a metadata object from a user by a specific key.
+         */
         readonly getUserMetadata: {
             readonly name: "GetUserMetadata";
             readonly requestType: MessageFns<GetUserMetadataRequest>;
@@ -3607,6 +3756,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete User Metadata By Key
+         *
+         * Deprecated: use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx) instead.
+         *
+         * Get a metadata object from a user by a specific key.
+         */
         readonly removeUserMetadata: {
             readonly name: "RemoveUserMetadata";
             readonly requestType: MessageFns<RemoveUserMetadataRequest>;
@@ -3621,6 +3777,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete User Metadata By Key
+         *
+         * Deprecated: use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx) instead.
+         *
+         * Remove a list of metadata objects from a user with a list of keys.
+         */
         readonly bulkRemoveUserMetadata: {
             readonly name: "BulkRemoveUserMetadata";
             readonly requestType: MessageFns<BulkRemoveUserMetadataRequest>;
@@ -3635,7 +3798,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 GetUserByID */
+        /**
+         * Get User Profile (Human)
+         *
+         * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+         *
+         * Get basic information like first_name and last_name of a user.
+         */
         readonly getHumanProfile: {
             readonly name: "GetHumanProfile";
             readonly requestType: MessageFns<GetHumanProfileRequest>;
@@ -3650,7 +3819,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 UpdateHumanUser */
+        /**
+         * Update User Profile (Human)
+         *
+         * Deprecated: use [user service v2 UpdateHumanUser](apis/resources/user_service_v2/user-service-update-human-user.api.mdx) instead.
+         *
+         * Update the profile information from a user. The profile includes basic information like first_name and last_name.
+         */
         readonly updateHumanProfile: {
             readonly name: "UpdateHumanProfile";
             readonly requestType: MessageFns<UpdateHumanProfileRequest>;
@@ -3665,7 +3840,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 GetUserByID */
+        /**
+         * Get User Email (Human)
+         *
+         * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+         *
+         * Get the email address and the verification state of the address.
+         */
         readonly getHumanEmail: {
             readonly name: "GetHumanEmail";
             readonly requestType: MessageFns<GetHumanEmailRequest>;
@@ -3680,7 +3861,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 SetEmail */
+        /**
+         * Update User Email (Human)
+         *
+         * Deprecated: use [user service v2 SetEmail](apis/resources/user_service_v2/user-service-set-email.api.mdx) instead.
+         *
+         * Change the email address of a user. If the state is set to not verified, the user will get a verification email.
+         */
         readonly updateHumanEmail: {
             readonly name: "UpdateHumanEmail";
             readonly requestType: MessageFns<UpdateHumanEmailRequest>;
@@ -3696,8 +3883,11 @@ export declare const ManagementServiceDefinition: {
             };
         };
         /**
-         * Deprecated: not used anymore in user state
-         * To resend a verification email use the user service v2 ResendEmailCode
+         * Resend User Initialization Email
+         *
+         * Deprecated: not used anymore in user state so will be removed.
+         *
+         * A newly created user will get an initialization email to verify the email address and set a password. Resend the email with this request to the user's email address, or a newly added address.
          */
         readonly resendHumanInitialization: {
             readonly name: "ResendHumanInitialization";
@@ -3713,7 +3903,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ResendEmailCode */
+        /**
+         * Resend User Email Verification
+         *
+         * Deprecated: use [user service v2 ResendEmailCode](apis/resources/user_service_v2/user-service-resend-email-code.api.mdx) instead.
+         *
+         * Resend the email verification notification to the given email address of the user.
+         */
         readonly resendHumanEmailVerification: {
             readonly name: "ResendHumanEmailVerification";
             readonly requestType: MessageFns<ResendHumanEmailVerificationRequest>;
@@ -3728,7 +3924,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 GetUserByID */
+        /**
+         * Get User Phone (Human)
+         *
+         * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+         *
+         * Get the phone number and the verification state of the number. The phone number is only for informational purposes and to send messages, not for Authentication (2FA).
+         */
         readonly getHumanPhone: {
             readonly name: "GetHumanPhone";
             readonly requestType: MessageFns<GetHumanPhoneRequest>;
@@ -3743,7 +3945,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 SetPhone */
+        /**
+         * Update User Phone (Human)
+         *
+         * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+         *
+         * Change the phone number of a user. If the state is set to not verified, the user will get an SMS to verify (if a notification provider is configured). The phone number is only for informational purposes and to send messages, not for Authentication (2FA).
+         */
         readonly updateHumanPhone: {
             readonly name: "UpdateHumanPhone";
             readonly requestType: MessageFns<UpdateHumanPhoneRequest>;
@@ -3758,7 +3966,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 SetPhone */
+        /**
+         * Remove User Phone (Human)
+         *
+         * Deprecated: use user service v2 [user service v2 SetPhone](apis/resources/user_service_v2/user-service-set-phone.api.mdx) instead.
+         *
+         * Remove the configured phone number of a user.
+         */
         readonly removeHumanPhone: {
             readonly name: "RemoveHumanPhone";
             readonly requestType: MessageFns<RemoveHumanPhoneRequest>;
@@ -3773,7 +3987,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ResendPhoneCode */
+        /**
+         * Resend User Phone Verification
+         *
+         * Deprecated: use user service v2 [user service v2 ResendPhoneCode](apis/resources/user_service_v2/user-service-resend-phone-code.api.mdx) instead.
+         *
+         * Resend the notification for the verification of the phone number, to the number stored on the user.
+         */
         readonly resendHumanPhoneVerification: {
             readonly name: "ResendHumanPhoneVerification";
             readonly requestType: MessageFns<ResendHumanPhoneVerificationRequest>;
@@ -3788,6 +4008,11 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete User Avatar (Human)
+         *
+         * Removes the avatar that is currently set on the user.
+         */
         readonly removeHumanAvatar: {
             readonly name: "RemoveHumanAvatar";
             readonly requestType: MessageFns<RemoveHumanAvatarRequest>;
@@ -3802,7 +4027,11 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 SetPassword */
+        /**
+         * Set Human Initial Password
+         *
+         * Deprecated: use [user service v2 SetPassword](apis/resources/user_service_v2/user-service-set-password.api.mdx) instead.
+         */
         readonly setHumanInitialPassword: {
             readonly name: "SetHumanInitialPassword";
             readonly requestType: MessageFns<SetHumanInitialPasswordRequest>;
@@ -3817,7 +4046,11 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 SetPassword */
+        /**
+         * Set User Password
+         *
+         * Deprecated: use [user service v2 SetPassword](apis/resources/user_service_v2/user-service-set-password.api.mdx) instead.
+         */
         readonly setHumanPassword: {
             readonly name: "SetHumanPassword";
             readonly requestType: MessageFns<SetHumanPasswordRequest>;
@@ -3832,7 +4065,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 PasswordReset */
+        /**
+         * Send Reset Password Notification
+         *
+         * Deprecated: use [user service v2 PasswordReset](apis/resources/user_service_v2/user-service-password-reset.api.mdx) instead.
+         *
+         * The user will receive an email with a link to change the password.
+         */
         readonly sendHumanResetPasswordNotification: {
             readonly name: "SendHumanResetPasswordNotification";
             readonly requestType: MessageFns<SendHumanResetPasswordNotificationRequest>;
@@ -3847,7 +4086,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListAuthenticationMethodTypes */
+        /**
+         * Get User Authentication Factors (2FA/MFA)
+         *
+         * Deprecated: use [user service v2 ListAuthenticationMethodTypes](apis/resources/user_service_v2/user-service-list-authentication-method-types.api.mdx) instead.
+         *
+         * Get a list of authentication factors the user has set. Including Second Factors (2FA) and Multi-Factors (MFA).
+         */
         readonly listHumanAuthFactors: {
             readonly name: "ListHumanAuthFactors";
             readonly requestType: MessageFns<ListHumanAuthFactorsRequest>;
@@ -3862,7 +4107,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemoveTOTP */
+        /**
+         * Remove Multi-Factor OTP
+         *
+         * Deprecated: use [user service v2 RemoveTOTP](apis/resources/user_service_v2/user-service-remove-totp.api.mdx) instead.
+         *
+         * Remove the configured One-Time Password (OTP) as a factor from the user. OTP is an authentication app, like Authy or Google/Microsoft Authenticator.
+         */
         readonly removeHumanAuthFactorOTP: {
             readonly name: "RemoveHumanAuthFactorOTP";
             readonly requestType: MessageFns<RemoveHumanAuthFactorOTPRequest>;
@@ -3877,7 +4128,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemoveU2F */
+        /**
+         * Remove Multi-Factor U2F
+         *
+         * Deprecated: use [user service v2 RemoveU2F](apis/resources/user_service_v2/user-service-remove-u-2-f.api.mdx) instead.
+         *
+         * Remove the configured Universal Second Factor (U2F) as a factor from the user. U2F is a device-dependent factor like FingerPrint, Windows-Hello, etc.
+         */
         readonly removeHumanAuthFactorU2F: {
             readonly name: "RemoveHumanAuthFactorU2F";
             readonly requestType: MessageFns<RemoveHumanAuthFactorU2FRequest>;
@@ -3892,7 +4149,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemoveOTPSMS */
+        /**
+         * Remove Multi-Factor OTP SMS
+         *
+         * Deprecated: use [user service v2 RemoveOTPSMS](apis/resources/user_service_v2/user-service-remove-otpsms.api.mdx) instead.
+         *
+         * Remove the configured One-Time Password (OTP) SMS as a factor from the user. As only one OTP SMS per user is allowed, the user will not have OTP SMS as a second factor afterward.
+         */
         readonly removeHumanAuthFactorOTPSMS: {
             readonly name: "RemoveHumanAuthFactorOTPSMS";
             readonly requestType: MessageFns<RemoveHumanAuthFactorOTPSMSRequest>;
@@ -3907,7 +4170,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemoveOTPEmail */
+        /**
+         * Remove Multi-Factor OTP Email
+         *
+         * Deprecated: use [user service v2 RemoveOTPEmail](apis/resources/user_service_v2/user-service-remove-otp-email.api.mdx) instead.
+         *
+         * Remove the configured One-Time Password (OTP) Email as a factor from the user. As only one OTP Email per user is allowed, the user will not have OTP Email as a second factor afterward.
+         */
         readonly removeHumanAuthFactorOTPEmail: {
             readonly name: "RemoveHumanAuthFactorOTPEmail";
             readonly requestType: MessageFns<RemoveHumanAuthFactorOTPEmailRequest>;
@@ -3922,7 +4191,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListPasskeys */
+        /**
+         * Search Passwordless/Passkey authentication
+         *
+         * Deprecated: use [user service v2 ListPasskeys](apis/resources/user_service_v2/user-service-list-passkeys.api.mdx) instead.
+         *
+         * Get a list of configured passwordless/passkey authentication methods from the user. Passwordless/passkey is a device-dependent authentication like FingerScan, WindowsHello or a Hardware Token.
+         */
         readonly listHumanPasswordless: {
             readonly name: "ListHumanPasswordless";
             readonly requestType: MessageFns<ListHumanPasswordlessRequest>;
@@ -3937,7 +4212,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RegisterPasskey */
+        /**
+         * Add Passwordless/Passkey Registration Link
+         *
+         * Deprecated: use [user service v2 RegisterPasskey](apis/resources/user_service_v2/user-service-register-passkey.api.mdx) instead.
+         *
+         * Adds a new passwordless/passkey authenticator link to the user and returns it in the response. The link enables the user to register a new device if current passwordless/passkey devices are all platform authenticators. e.g. User has already registered Windows Hello and wants to register FaceID on the iPhone.
+         */
         readonly addPasswordlessRegistration: {
             readonly name: "AddPasswordlessRegistration";
             readonly requestType: MessageFns<AddPasswordlessRegistrationRequest>;
@@ -3952,7 +4233,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RegisterPasskey */
+        /**
+         * Send Passwordless/Passkey Registration Link
+         *
+         * Deprecated: use [user service v2 RegisterPasskey](apis/resources/user_service_v2/user-service-register-passkey.api.mdx) instead.
+         *
+         * Adds a new passwordless/passkey authenticator link to the user and sends it to the user per email. The link enables the user to register a new device if current passwordless/passkey devices are all platform authenticators. e.g. User has already registered Windows Hello and wants to register FaceID on the iPhone.
+         */
         readonly sendPasswordlessRegistration: {
             readonly name: "SendPasswordlessRegistration";
             readonly requestType: MessageFns<SendPasswordlessRegistrationRequest>;
@@ -3967,7 +4254,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemovePasskey */
+        /**
+         * Delete Passwordless/Passkey
+         *
+         * Deprecated: use [user service v2 RemovePasskey](apis/resources/user_service_v2/user-service-remove-passkey.api.mdx) instead.
+         *
+         * Remove a configured passwordless/passkey authentication method from the user. (e.g FaceID, FingerScane, WindowsHello, etc.).
+         */
         readonly removeHumanPasswordless: {
             readonly name: "RemoveHumanPasswordless";
             readonly requestType: MessageFns<RemoveHumanPasswordlessRequest>;
@@ -3982,6 +4275,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update Machine User
+         *
+         * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+         *
+         * Change a service account/machine user. It is used for accounts with non-interactive authentication possibilities.
+         */
         readonly updateMachine: {
             readonly name: "UpdateMachine";
             readonly requestType: MessageFns<UpdateMachineRequest>;
@@ -3996,6 +4296,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Secret for Machine User
+         *
+         * Deprecated: use [user service v2 AddSecret](apis/resources/user_service_v2/user-service-add-secret.api.mdx) instead.
+         *
+         * Create a new secret for a machine user/service account. It is used to authenticate the user (client credential grant).
+         */
         readonly generateMachineSecret: {
             readonly name: "GenerateMachineSecret";
             readonly requestType: MessageFns<GenerateMachineSecretRequest>;
@@ -4010,6 +4317,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete Secret of Machine User
+         *
+         * Deprecated: use [user service v2 RemoveSecret](apis/resources/user_service_v2/user-service-remove-secret.api.mdx) instead.
+         *
+         * Delete a secret of a machine user/service account. The user will not be able to authenticate with the secret afterward.
+         */
         readonly removeMachineSecret: {
             readonly name: "RemoveMachineSecret";
             readonly requestType: MessageFns<RemoveMachineSecretRequest>;
@@ -4024,6 +4338,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Machine user Key By ID
+         *
+         * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+         *
+         * Get a specific Key of a machine user by its id. Machine keys are used to authenticate with jwt profile authentication.
+         */
         readonly getMachineKeyByIDs: {
             readonly name: "GetMachineKeyByIDs";
             readonly requestType: MessageFns<GetMachineKeyByIDsRequest>;
@@ -4038,6 +4359,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Machine Keys
+         *
+         * Deprecated: use [user service v2 ListKeys](apis/resources/user_service_v2/user-service-list-keys.api.mdx) instead.
+         *
+         * Get the list of keys of a machine user. Machine keys are used to authenticate with jwt profile authentication.
+         */
         readonly listMachineKeys: {
             readonly name: "ListMachineKeys";
             readonly requestType: MessageFns<ListMachineKeysRequest>;
@@ -4052,6 +4380,16 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Key for machine user
+         *
+         * Deprecated: use [user service v2 AddKey](apis/resources/user_service_v2/user-service-add-key.api.mdx) instead.
+         *
+         * If a public key is not supplied, a new key is generated and will be returned in the response.
+         * Make sure to store the returned key.
+         * If an RSA public key is supplied, the private key is omitted from the response.
+         * Machine keys are used to authenticate with jwt profile.
+         */
         readonly addMachineKey: {
             readonly name: "AddMachineKey";
             readonly requestType: MessageFns<AddMachineKeyRequest>;
@@ -4066,6 +4404,14 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete Key for machine user
+         *
+         * Deprecated: use [user service v2 RemoveKey](apis/resources/user_service_v2/user-service-remove-key.api.mdx) instead.
+         *
+         * Delete a specific key from a user.
+         * The user will not be able to authenticate with that key afterward.
+         */
         readonly removeMachineKey: {
             readonly name: "RemoveMachineKey";
             readonly requestType: MessageFns<RemoveMachineKeyRequest>;
@@ -4080,6 +4426,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Personal-Access-Token (PAT) by ID
+         *
+         * Deprecated: use [user service v2 ListPersonalAccessTokens](apis/resources/user_service_v2/user-service-list-personal-access-tokens.api.mdx) instead.
+         *
+         * Returns the PAT for a user, currently only available for machine users/service accounts. PATs are ready-to-use tokens and can be sent directly in the authentication header.
+         */
         readonly getPersonalAccessTokenByIDs: {
             readonly name: "GetPersonalAccessTokenByIDs";
             readonly requestType: MessageFns<GetPersonalAccessTokenByIDsRequest>;
@@ -4094,6 +4447,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Personal-Access-Tokens (PATs)
+         *
+         * Deprecated: use [user service v2 ListPersonalAccessTokens](apis/resources/user_service_v2/user-service-list-personal-access-tokens.api.mdx) instead.
+         *
+         * Returns a list of PATs for a user, currently only available for machine users/service accounts. PATs are ready-to-use tokens and can be sent directly in the authentication header.
+         */
         readonly listPersonalAccessTokens: {
             readonly name: "ListPersonalAccessTokens";
             readonly requestType: MessageFns<ListPersonalAccessTokensRequest>;
@@ -4108,6 +4468,15 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create a Personal-Access-Token (PAT)
+         *
+         * Deprecated: use [user service v2 AddPersonalAccessToken](apis/resources/user_service_v2/user-service-add-personal-access-token.api.mdx) instead.
+         *
+         * Generates a new PAT for the user. Currently only available for machine users.
+         * The token will be returned in the response, make sure to store it.
+         * PATs are ready-to-use tokens and can be sent directly in the authentication header.
+         */
         readonly addPersonalAccessToken: {
             readonly name: "AddPersonalAccessToken";
             readonly requestType: MessageFns<AddPersonalAccessTokenRequest>;
@@ -4122,6 +4491,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove a Personal-Access-Token (PAT) by ID
+         *
+         * Deprecated: use [user service v2 RemovePersonalAccessToken](apis/resources/user_service_v2/user-service-remove-personal-access-token.api.mdx) instead.
+         *
+         * Delete a PAT from a user. Afterward, the user will not be able to authenticate with that token anymore.
+         */
         readonly removePersonalAccessToken: {
             readonly name: "RemovePersonalAccessToken";
             readonly requestType: MessageFns<RemovePersonalAccessTokenRequest>;
@@ -4136,7 +4512,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 ListLinkedIDPs */
+        /**
+         * List Social Logins
+         *
+         * Deprecated: use [user service v2 ListLinkedIDPs](apis/resources/user_service_v2/user-service-list-idp-links.api.mdx) instead.
+         *
+         * Returns a list of all linked identity providers/social logins of the user. (e. Google, Microsoft, AzureAD, etc.).
+         */
         readonly listHumanLinkedIDPs: {
             readonly name: "ListHumanLinkedIDPs";
             readonly requestType: MessageFns<ListHumanLinkedIDPsRequest>;
@@ -4151,7 +4533,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Deprecated: please use user service v2 RemoveLinkedIDP */
+        /**
+         * Remove Social Login
+         *
+         * Deprecated: use [user service v2 RemoveIDPLink](apis/resources/user_service_v2/user-service-remove-idp-link.api.mdx) instead.
+         *
+         * Remove a configured social logins/identity providers of the user (e.g. Google, Microsoft, AzureAD, etc.). The user will not be able to log in with the given provider afterward. Make sure the user does have other possibilities to authenticate.
+         */
         readonly removeHumanLinkedIDP: {
             readonly name: "RemoveHumanLinkedIDP";
             readonly requestType: MessageFns<RemoveHumanLinkedIDPRequest>;
@@ -4166,6 +4554,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List ZITADEL Permissions
+         *
+         * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+         *
+         * Show all the permissions the user has in ZITADEL (ZITADEL Manager).
+         */
         readonly listUserMemberships: {
             readonly name: "ListUserMemberships";
             readonly requestType: MessageFns<ListUserMembershipsRequest>;
@@ -4194,6 +4589,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Organization By Domain
+         *
+         * Deprecated: use [organization v2 service ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+         *
+         * Search an organization by the domain, overall organizations. The domain must match exactly.
+         */
         readonly getOrgByDomainGlobal: {
             readonly name: "GetOrgByDomainGlobal";
             readonly requestType: MessageFns<GetOrgByDomainGlobalRequest>;
@@ -4222,6 +4624,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Organization
+         *
+         * Deprecated: use [organization service v2 CreateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-create-organization.api.mdx) instead
+         *
+         * Create a new organization. Based on the given name a domain will be generated to be able to identify users within an organization.
+         */
         readonly addOrg: {
             readonly name: "AddOrg";
             readonly requestType: MessageFns<AddOrgRequest>;
@@ -4236,6 +4645,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update Organization
+         *
+         * Deprecated: use [organization service v2 UpdateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-update-organization.api.mdx) instead.
+         *
+         * Change the name of the organization.
+         */
         readonly updateOrg: {
             readonly name: "UpdateOrg";
             readonly requestType: MessageFns<UpdateOrgRequest>;
@@ -4250,6 +4666,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Deactivate Organization
+         *
+         * Deprecated: use [organization service v2 DeactivateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-deactivate-organization.api.mdx) instead.
+         *
+         * Sets the state of my organization to deactivated. Users of this organization will not be able to log in.
+         */
         readonly deactivateOrg: {
             readonly name: "DeactivateOrg";
             readonly requestType: MessageFns<DeactivateOrgRequest>;
@@ -4264,6 +4687,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Reactivate Organization
+         *
+         * Deprecated: use [organization service v2 ActivateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-activate-organization.api.mdx) instead.
+         *
+         * Set the state of my organization to active. The state of the organization has to be deactivated to perform the request. Users of this organization will be able to log in again.
+         */
         readonly reactivateOrg: {
             readonly name: "ReactivateOrg";
             readonly requestType: MessageFns<ReactivateOrgRequest>;
@@ -4278,6 +4708,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete Organization
+         *
+         * Deprecated: use [organization service v2 DeleteOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization.api.mdx) instead.
+         *
+         * Deletes my organization and all its resources (Users, Projects, Grants to and from the org). Users of this organization will not be able to log in.
+         */
         readonly removeOrg: {
             readonly name: "RemoveOrg";
             readonly requestType: MessageFns<RemoveOrgRequest>;
@@ -4292,6 +4729,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Set Organization Metadata
+         *
+         * Deprecated: use [organization service v2 SetOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-set-organization-metadata.api.mdx) instead.
+         *
+         * This endpoint either adds or updates a metadata value for the requested key. Make sure the value is base64 encoded.
+         */
         readonly setOrgMetadata: {
             readonly name: "SetOrgMetadata";
             readonly requestType: MessageFns<SetOrgMetadataRequest>;
@@ -4306,6 +4750,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Bulk Set Organization Metadata
+         *
+         * Deprecated: use [organization service v2 SetOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-set-organization-metadata.api.mdx) instead.
+         *
+         * This endpoint sets a list of metadata to the organization. Make sure the values are base64 encoded.
+         */
         readonly bulkSetOrgMetadata: {
             readonly name: "BulkSetOrgMetadata";
             readonly requestType: MessageFns<BulkSetOrgMetadataRequest>;
@@ -4320,6 +4771,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Organization Metadata
+         *
+         * Deprecated: use [organization service v2 ListOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-metadata.api.mdx) instead.
+         *
+         * Get the metadata of an organization filtered by your query.
+         */
         readonly listOrgMetadata: {
             readonly name: "ListOrgMetadata";
             readonly requestType: MessageFns<ListOrgMetadataRequest>;
@@ -4334,6 +4792,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Organization Metadata By Key
+         *
+         * Deprecated: use [organization service v2 ListOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-metadata.api.mdx) instead.
+         *
+         * Get a metadata object from an organization by a specific key.
+         */
         readonly getOrgMetadata: {
             readonly name: "GetOrgMetadata";
             readonly requestType: MessageFns<GetOrgMetadataRequest>;
@@ -4348,6 +4813,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete Organization Metadata By Key
+         *
+         * Deprecated: use [organization service v2 DeleteOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-metadata.api.mdx) instead.
+         *
+         * Remove a metadata object from an organization with a specific key.
+         */
         readonly removeOrgMetadata: {
             readonly name: "RemoveOrgMetadata";
             readonly requestType: MessageFns<RemoveOrgMetadataRequest>;
@@ -4362,6 +4834,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Bulk Delete Metadata
+         *
+         * Deprecated: use [organization service v2 DeleteOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-metadata.api.mdx) instead.
+         *
+         * Remove a list of metadata objects from an organization with a list of keys.
+         */
         readonly bulkRemoveOrgMetadata: {
             readonly name: "BulkRemoveOrgMetadata";
             readonly requestType: MessageFns<BulkRemoveOrgMetadataRequest>;
@@ -4376,20 +4855,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        readonly listOrgDomains: {
-            readonly name: "ListOrgDomains";
-            readonly requestType: MessageFns<ListOrgDomainsRequest>;
-            readonly requestStream: false;
-            readonly responseType: MessageFns<ListOrgDomainsResponse>;
-            readonly responseStream: false;
-            readonly options: {
-                readonly _unknownFields: {
-                    readonly 8338: readonly [Buffer];
-                    readonly 400002: readonly [Buffer];
-                    readonly 578365826: readonly [Buffer];
-                };
-            };
-        };
+        /**
+         * Add Domain
+         *
+         * Deprecated: use [organization service v2 AddOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-add-organization-domain.api.mdx) instead.
+         *
+         * Add a new domain to an organization. The domains are used to identify to which organization a user belongs.
+         */
         readonly addOrgDomain: {
             readonly name: "AddOrgDomain";
             readonly requestType: MessageFns<AddOrgDomainRequest>;
@@ -4404,6 +4876,34 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Domains
+         *
+         * Deprecated: use [organization service v2 ListOrganizationDomains](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-domains.api.mdx) instead.
+         *
+         * Returns the list of registered domains of an organization. The domains are used to identify to which organization a user belongs.
+         */
+        readonly listOrgDomains: {
+            readonly name: "ListOrgDomains";
+            readonly requestType: MessageFns<ListOrgDomainsRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<ListOrgDomainsResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400002: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Remove Domain
+         *
+         * Deprecated: use [organization service v2 DeleteOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-domain.api.mdx) instead.
+         *
+         * Delete a new domain from an organization. The domains are used to identify to which organization a user belongs. If the uses use the domain for login, this will not be possible afterwards. They have to use another domain instead.
+         */
         readonly removeOrgDomain: {
             readonly name: "RemoveOrgDomain";
             readonly requestType: MessageFns<RemoveOrgDomainRequest>;
@@ -4418,6 +4918,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Generate Domain Verification
+         *
+         * Deprecated: use [organization service v2 GenerateOrganizationDomainValidation](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-generate-organization-domain-validation.api.mdx) instead.
+         *
+         * Generate a new file to be able to verify your domain with DNS or HTTP challenge.
+         */
         readonly generateOrgDomainValidation: {
             readonly name: "GenerateOrgDomainValidation";
             readonly requestType: MessageFns<GenerateOrgDomainValidationRequest>;
@@ -4432,6 +4939,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Verify Domain
+         *
+         * Deprecated: use [organization service v2 VerifyOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-verify-organization-domain.api.mdx) instead.
+         *
+         * Make sure you have added the required verification to your domain, depending on the method you have chosen (HTTP or DNS challenge). ZITADEL will check it and set the domain as verified if it was successful. A verify domain has to be unique.
+         */
         readonly validateOrgDomain: {
             readonly name: "ValidateOrgDomain";
             readonly requestType: MessageFns<ValidateOrgDomainRequest>;
@@ -4474,6 +4988,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Organization Members
+         *
+         * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the organization level, matching the search queries. The search queries will be AND linked.
+         */
         readonly listOrgMembers: {
             readonly name: "ListOrgMembers";
             readonly requestType: MessageFns<ListOrgMembersRequest>;
@@ -4488,6 +5009,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add Organization Member
+         *
+         * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list on the organization level with one or multiple roles.
+         */
         readonly addOrgMember: {
             readonly name: "AddOrgMember";
             readonly requestType: MessageFns<AddOrgMemberRequest>;
@@ -4502,6 +5030,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update Organization Member
+         *
+         * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+         */
         readonly updateOrgMember: {
             readonly name: "UpdateOrgMember";
             readonly requestType: MessageFns<UpdateOrgMemberRequest>;
@@ -4516,6 +5051,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Organization Member
+         *
+         * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an instance level. The user can still have roles on another level (iam, project).
+         */
         readonly removeOrgMember: {
             readonly name: "RemoveOrgMember";
             readonly requestType: MessageFns<RemoveOrgMemberRequest>;
@@ -4530,6 +5072,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Project By ID
+         *
+         * Deprecated: use [project v2 service GetProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-get-project.api.mdx) instead.
+         *
+         * Returns a project owned by the organization (no granted projects). A Project is a vessel for different applications sharing the same role context.
+         */
         readonly getProjectByID: {
             readonly name: "GetProjectByID";
             readonly requestType: MessageFns<GetProjectByIDRequest>;
@@ -4544,6 +5093,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Granted Project By ID
+         *
+         * Deprecated: use [project v2 service ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+         *
+         * Returns a project owned by another organization and granted to my organization. A Project is a vessel for different applications sharing the same role context.
+         */
         readonly getGrantedProjectByID: {
             readonly name: "GetGrantedProjectByID";
             readonly requestType: MessageFns<GetGrantedProjectByIDRequest>;
@@ -4558,6 +5114,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Project
+         *
+         * Deprecated: use [project v2 service ListProjects](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-projects.api.mdx) instead.
+         *
+         * Lists projects my organization is the owner of (no granted projects). A Project is a vessel for different applications sharing the same role context.
+         */
         readonly listProjects: {
             readonly name: "ListProjects";
             readonly requestType: MessageFns<ListProjectsRequest>;
@@ -4572,6 +5135,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Granted Project
+         *
+         * Deprecated: use [project v2 service ListProjects](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-projects.api.mdx) instead.
+         *
+         * Lists projects my organization got granted from another organization. A Project is a vessel for different applications sharing the same role context.
+         */
         readonly listGrantedProjects: {
             readonly name: "ListGrantedProjects";
             readonly requestType: MessageFns<ListGrantedProjectsRequest>;
@@ -4586,6 +5156,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Granted Project Roles
+         *
+         * Deprecated: use [project v2 service ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+         *
+         * Lists the roles a granted projects has. These are the roles, that have been granted by the owner organization to my organization.
+         */
         readonly listGrantedProjectRoles: {
             readonly name: "ListGrantedProjectRoles";
             readonly requestType: MessageFns<ListGrantedProjectRolesRequest>;
@@ -4614,6 +5191,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Project
+         *
+         * Deprecated: use [project v2 service CreateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-create-project.api.mdx) instead.
+         *
+         * Create a new project. A Project is a vessel for different applications sharing the same role context.
+         */
         readonly addProject: {
             readonly name: "AddProject";
             readonly requestType: MessageFns<AddProjectRequest>;
@@ -4628,6 +5212,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update Project
+         *
+         * Deprecated: use [project v2 service UpdateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project.api.mdx) instead.
+         *
+         * Update a project and its settings. A Project is a vessel for different applications sharing the same role context.
+         */
         readonly updateProject: {
             readonly name: "UpdateProject";
             readonly requestType: MessageFns<UpdateProjectRequest>;
@@ -4642,6 +5233,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Deactivate Project
+         *
+         * Deprecated: use [project v2 service DeactivateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-deactivate-project.api.mdx) instead.
+         *
+         * Set the state of a project to deactivated. Request returns an error if the project is already deactivated.
+         */
         readonly deactivateProject: {
             readonly name: "DeactivateProject";
             readonly requestType: MessageFns<DeactivateProjectRequest>;
@@ -4656,6 +5254,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Reactivate Project
+         *
+         * Deprecated: use [project v2 service ActivateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-activate-project.api.mdx) instead.
+         *
+         * Set the state of a project to active. Request returns an error if the project is not deactivated.
+         */
         readonly reactivateProject: {
             readonly name: "ReactivateProject";
             readonly requestType: MessageFns<ReactivateProjectRequest>;
@@ -4670,6 +5275,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Project
+         *
+         * Deprecated: use [project v2 service DeleteProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-delete-project.api.mdx) instead.
+         *
+         * Set the state of a project to active. Request returns an error if the project is not deactivated.
+         */
         readonly removeProject: {
             readonly name: "RemoveProject";
             readonly requestType: MessageFns<RemoveProjectRequest>;
@@ -4684,6 +5296,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Project Roles
+         *
+         * Deprecated: use [project v2 service ListProjectRoles](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-roles.api.mdx) instead.
+         *
+         * Returns all roles of a project matching the search query.
+         */
         readonly listProjectRoles: {
             readonly name: "ListProjectRoles";
             readonly requestType: MessageFns<ListProjectRolesRequest>;
@@ -4698,6 +5317,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add Project Role
+         *
+         * Deprecated: use [project v2 service AddProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-add-project-role.api.mdx) instead.
+         *
+         * Add a new project role to a project. The key must be unique within the project.
+         */
         readonly addProjectRole: {
             readonly name: "AddProjectRole";
             readonly requestType: MessageFns<AddProjectRoleRequest>;
@@ -4712,6 +5338,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Bulk Add Project Role
+         *
+         * Deprecated: use [project v2 service AddProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-add-project-role.api.mdx) instead.
+         *
+         * Add a list of roles to a project. The keys must be unique within the project.
+         */
         readonly bulkAddProjectRoles: {
             readonly name: "BulkAddProjectRoles";
             readonly requestType: MessageFns<BulkAddProjectRolesRequest>;
@@ -4726,6 +5359,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Change Project Role
+         *
+         * Deprecated: use [project v2 service UpdateProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project-role.api.mdx) instead.
+         *
+         * Change a project role. The key is not editable. If a key should change, remove the role and create a new one.
+         */
         readonly updateProjectRole: {
             readonly name: "UpdateProjectRole";
             readonly requestType: MessageFns<UpdateProjectRoleRequest>;
@@ -4740,6 +5380,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Project Role
+         *
+         * Deprecated: use [project v2 service RemoveProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-remove-project-role.api.mdx) instead.
+         *
+         * Removes the role from the project and on every resource it has a dependency. This includes project grants and user grants.
+         */
         readonly removeProjectRole: {
             readonly name: "RemoveProjectRole";
             readonly requestType: MessageFns<RemoveProjectRoleRequest>;
@@ -4768,6 +5415,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Project Members
+         *
+         * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project level, matching the search queries. The search queries will be AND linked.
+         */
         readonly listProjectMembers: {
             readonly name: "ListProjectMembers";
             readonly requestType: MessageFns<ListProjectMembersRequest>;
@@ -4782,6 +5436,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add Project Member
+         *
+         * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list on the project level with one or multiple roles.
+         */
         readonly addProjectMember: {
             readonly name: "AddProjectMember";
             readonly requestType: MessageFns<AddProjectMemberRequest>;
@@ -4796,6 +5457,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update Project Member
+         *
+         * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+         */
         readonly updateProjectMember: {
             readonly name: "UpdateProjectMember";
             readonly requestType: MessageFns<UpdateProjectMemberRequest>;
@@ -4810,6 +5478,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Project Member
+         *
+         * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an project level. The user can still have roles on another level (iam, organization).
+         */
         readonly removeProjectMember: {
             readonly name: "RemoveProjectMember";
             readonly requestType: MessageFns<RemoveProjectMemberRequest>;
@@ -4824,6 +5499,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Application By ID
+         *
+         * Deprecated: Use [GetApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-get-application.api.mdx) instead to fetch an app
+         *
+         * Get an application of any type (OIDC, API, SAML).
+         */
         readonly getAppByID: {
             readonly name: "GetAppByID";
             readonly requestType: MessageFns<GetAppByIDRequest>;
@@ -4838,6 +5520,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Applications
+         *
+         * Deprecated: Use [ListApplications](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-list-applications.api.mdx) instead to list applications
+         *
+         * Returns all applications within a project, that match the query.
+         */
         readonly listApps: {
             readonly name: "ListApps";
             readonly requestType: MessageFns<ListAppsRequest>;
@@ -4866,6 +5555,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Application (OIDC)
+         *
+         * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create an OIDC application.
+         *
+         * Create a new OIDC client. The client id will be generated and returned in the response. Depending on the chosen configuration also a secret will be returned.
+         */
         readonly addOIDCApp: {
             readonly name: "AddOIDCApp";
             readonly requestType: MessageFns<AddOIDCAppRequest>;
@@ -4880,6 +5576,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Application (SAML)
+         *
+         * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create a SAML application.
+         *
+         * Create a new SAML client. Returns an entity ID.
+         */
         readonly addSAMLApp: {
             readonly name: "AddSAMLApp";
             readonly requestType: MessageFns<AddSAMLAppRequest>;
@@ -4894,6 +5597,14 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Application (API)
+         *
+         * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create an API application
+         *
+         * Create a new API client. The client id will be generated and returned in the response.
+         * Depending on the chosen configuration also a secret will be generated and returned.
+         */
         readonly addAPIApp: {
             readonly name: "AddAPIApp";
             readonly requestType: MessageFns<AddAPIAppRequest>;
@@ -4908,7 +5619,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
-        /** Changes application */
+        /**
+         * Update Application
+         *
+         * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the generic params of an app.
+         *
+         * Update the basic information of an application. This doesn't include information that are dependent on the application type (OIDC, API, SAML)
+         */
         readonly updateApp: {
             readonly name: "UpdateApp";
             readonly requestType: MessageFns<UpdateAppRequest>;
@@ -4923,6 +5640,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update OIDC Application Config
+         *
+         * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of an OIDC app.
+         *
+         * Update the OIDC specific configuration of an application.
+         */
         readonly updateOIDCAppConfig: {
             readonly name: "UpdateOIDCAppConfig";
             readonly requestType: MessageFns<UpdateOIDCAppConfigRequest>;
@@ -4937,6 +5661,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update SAML Application Config
+         *
+         * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of a SAML app.
+         *
+         * Update the SAML specific configuration of an application.
+         */
         readonly updateSAMLAppConfig: {
             readonly name: "UpdateSAMLAppConfig";
             readonly requestType: MessageFns<UpdateSAMLAppConfigRequest>;
@@ -4951,6 +5682,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update API Application Config
+         *
+         * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of an API app.
+         *
+         * Update the OIDC-specific configuration of an application.
+         */
         readonly updateAPIAppConfig: {
             readonly name: "UpdateAPIAppConfig";
             readonly requestType: MessageFns<UpdateAPIAppConfigRequest>;
@@ -4965,6 +5703,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Deactivate Application
+         *
+         * Deprecated: Use [DeactivateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-deactivate-application.api.mdx) instead to deactivate an app.
+         *
+         * Set the state of an application to deactivated. It is not possible to request tokens for deactivated apps. Request returns an error if the application is already deactivated.
+         */
         readonly deactivateApp: {
             readonly name: "DeactivateApp";
             readonly requestType: MessageFns<DeactivateAppRequest>;
@@ -4979,6 +5724,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Reactivate Application
+         *
+         * Deprecated: Use [ReactivateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-reactivate-application.api.mdx) instead to reactivate an app.
+         *
+         * Set the state of an application to active. Request returns an error if the application is not deactivated.
+         */
         readonly reactivateApp: {
             readonly name: "ReactivateApp";
             readonly requestType: MessageFns<ReactivateAppRequest>;
@@ -4993,6 +5745,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Application
+         *
+         * Deprecated: Use [DeleteApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-delete-application.api.mdx) instead to delete an app.
+         *
+         * Remove an application. It is not possible to request tokens for removed apps. Request returns an error if the application is already deactivated.
+         */
         readonly removeApp: {
             readonly name: "RemoveApp";
             readonly requestType: MessageFns<RemoveAppRequest>;
@@ -5007,6 +5766,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Generate New OIDC Client Secret
+         *
+         * Deprecated: Use [RegenerateClientSecret](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-regenerate-client-secret.api.mdx) instead to regenerate an OIDC app client secret.
+         *
+         * Generates a new client secret for the OIDC application, make sure to save the response.
+         */
         readonly regenerateOIDCClientSecret: {
             readonly name: "RegenerateOIDCClientSecret";
             readonly requestType: MessageFns<RegenerateOIDCClientSecretRequest>;
@@ -5021,6 +5787,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Generate New API Client Secret
+         *
+         * Deprecated: Use [RegenerateClientSecret](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-regenerate-client-secret.api.mdx) instead to regenerate an API app client secret
+         *
+         * Generates a new client secret for the API application, make sure to save the response.
+         */
         readonly regenerateAPIClientSecret: {
             readonly name: "RegenerateAPIClientSecret";
             readonly requestType: MessageFns<RegenerateAPIClientSecretRequest>;
@@ -5035,6 +5808,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Application Key By ID
+         *
+         * Deprecated: Use [GetApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-get-application-key.api.mdx) instead to get an application key.
+         *
+         * Returns an application key. Keys are used for authorizing API Applications.
+         */
         readonly getAppKey: {
             readonly name: "GetAppKey";
             readonly requestType: MessageFns<GetAppKeyRequest>;
@@ -5049,6 +5829,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Application Keys
+         *
+         * Deprecated: Use [ListApplicationKeys](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-list-application-keys.api.mdx) instead to list application keys.
+         *
+         * Search application keys. Keys are used for authorizing API Applications.
+         */
         readonly listAppKeys: {
             readonly name: "ListAppKeys";
             readonly requestType: MessageFns<ListAppKeysRequest>;
@@ -5063,6 +5850,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Create Application Key
+         *
+         * Deprecated: Use [CreateApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application-key.api.mdx) instead to create an application key.
+         *
+         * Create a new application key, they are used for authorizing API Applications. Key details will be returned in the response, make sure to save it.
+         */
         readonly addAppKey: {
             readonly name: "AddAppKey";
             readonly requestType: MessageFns<AddAppKeyRequest>;
@@ -5077,6 +5871,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Delete Application Key
+         *
+         * Deprecated: Use [DeleteApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-delete-application-key.api.mdx) instead to delete an application key.
+         *
+         * Remove an application key. The API application will not be able to authorize with the key anymore.
+         */
         readonly removeAppKey: {
             readonly name: "RemoveAppKey";
             readonly requestType: MessageFns<RemoveAppKeyRequest>;
@@ -5105,6 +5906,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Project Grant By ID
+         *
+         * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+         *
+         * Returns a project grant. A project grant is when the organization grants its project to another organization.
+         */
         readonly getProjectGrantByID: {
             readonly name: "GetProjectGrantByID";
             readonly requestType: MessageFns<GetProjectGrantByIDRequest>;
@@ -5119,6 +5927,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Project Grants from Project
+         *
+         * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+         *
+         * Returns a list of project grants for a specific project. A project grant is when the organization grants its project to another organization.
+         */
         readonly listProjectGrants: {
             readonly name: "ListProjectGrants";
             readonly requestType: MessageFns<ListProjectGrantsRequest>;
@@ -5133,6 +5948,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search Project Grants
+         *
+         * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+         *
+         * Returns a list of project grants. A project grant is when the organization grants its project to another organization.
+         */
         readonly listAllProjectGrants: {
             readonly name: "ListAllProjectGrants";
             readonly requestType: MessageFns<ListAllProjectGrantsRequest>;
@@ -5147,6 +5969,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add Project Grant
+         *
+         * Deprecated: use [CreateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-create-project-grant.api.mdx) instead.
+         *
+         * Grant a project to another organization. The project grant will allow the granted organization to access the project and manage the authorizations for its users. Project Grant will be listed in the granted project of the granted organization.
+         */
         readonly addProjectGrant: {
             readonly name: "AddProjectGrant";
             readonly requestType: MessageFns<AddProjectGrantRequest>;
@@ -5161,6 +5990,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Change Project Grant
+         *
+         * Deprecated: use [UpdateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project-grant.api.mdx) instead.
+         *
+         * Change the roles of the project that is granted to another organization. The project grant will allow the granted organization to access the project and manage the authorizations for its users. Project Grant will be listed in the granted project of the granted organization.
+         */
         readonly updateProjectGrant: {
             readonly name: "UpdateProjectGrant";
             readonly requestType: MessageFns<UpdateProjectGrantRequest>;
@@ -5175,6 +6011,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Deactivate Project Grant
+         *
+         * Deprecated: use [DeactivateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-deactivate-project-grant.api.mdx) instead.
+         *
+         * Set the state of the project grant to deactivated. The grant has to be active to be able to deactivate.
+         */
         readonly deactivateProjectGrant: {
             readonly name: "DeactivateProjectGrant";
             readonly requestType: MessageFns<DeactivateProjectGrantRequest>;
@@ -5189,6 +6032,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Reactivate Project Grant
+         *
+         * Deprecated: use [ActivateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-activate-project-grant.api.mdx) instead.
+         *
+         * Set the state of the project grant to active. The grant has to be deactivated to be able to reactivate.
+         */
         readonly reactivateProjectGrant: {
             readonly name: "ReactivateProjectGrant";
             readonly requestType: MessageFns<ReactivateProjectGrantRequest>;
@@ -5203,6 +6053,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Project Grant
+         *
+         * Deprecated: use [DeleteProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-delete-project-grant.api.mdx) instead.
+         *
+         * Remove a project grant. All user grants for this project grant will also be removed. A user will not have access to the project afterward (if permissions are checked).
+         */
         readonly removeProjectGrant: {
             readonly name: "RemoveProjectGrant";
             readonly requestType: MessageFns<RemoveProjectGrantRequest>;
@@ -5231,6 +6088,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * List Project Grant Members
+         *
+         * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project grant level, matching the search queries. The search queries will be AND linked.
+         */
         readonly listProjectGrantMembers: {
             readonly name: "ListProjectGrantMembers";
             readonly requestType: MessageFns<ListProjectGrantMembersRequest>;
@@ -5245,6 +6109,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add Project Grant Member
+         *
+         * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project grant level, matching the search queries. The search queries will be AND linked.
+         */
         readonly addProjectGrantMember: {
             readonly name: "AddProjectGrantMember";
             readonly requestType: MessageFns<AddProjectGrantMemberRequest>;
@@ -5259,6 +6130,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update Project Grant Member
+         *
+         * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+         */
         readonly updateProjectGrantMember: {
             readonly name: "UpdateProjectGrantMember";
             readonly requestType: MessageFns<UpdateProjectGrantMemberRequest>;
@@ -5273,6 +6151,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove Project Grant Member
+         *
+         * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+         *
+         * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on a project grant level. The user can still have roles on another level (iam, organization, project).
+         */
         readonly removeProjectGrantMember: {
             readonly name: "RemoveProjectGrantMember";
             readonly requestType: MessageFns<RemoveProjectGrantMemberRequest>;
@@ -5287,6 +6172,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get User Grant By ID
+         *
+         * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and filter by its ID.
+         *
+         * Returns a user grant per ID. A user grant is a role a user has for a specific project and organization.
+         */
         readonly getUserGrantByID: {
             readonly name: "GetUserGrantByID";
             readonly requestType: MessageFns<GetUserGrantByIDRequest>;
@@ -5301,6 +6193,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Search User Grants
+         *
+         * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter to search for a users grants on owned or granted projects.
+         *
+         * Returns a list of user grants that match the search queries. User grants are the roles users have for a specific project and organization.
+         */
         readonly listUserGrants: {
             readonly name: "ListUserGrants";
             readonly requestType: MessageFns<ListUserGrantRequest>;
@@ -5315,6 +6214,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Add User Grant
+         *
+         * Deprecated: [Add an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-create-authorization.api.mdx) to grant a user access to an owned or granted project.
+         *
+         * Add a user grant for a specific user. User grants are the roles users have for a specific project and organization.
+         */
         readonly addUserGrant: {
             readonly name: "AddUserGrant";
             readonly requestType: MessageFns<AddUserGrantRequest>;
@@ -5329,6 +6235,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Update User Grant
+         *
+         * Deprecated: [Update an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-update-authorization.api.mdx) to update a user's roles on an owned or granted project.
+         *
+         * Update the roles of a user grant. User grants are the roles users have for a specific project and organization.
+         */
         readonly updateUserGrant: {
             readonly name: "UpdateUserGrant";
             readonly requestType: MessageFns<UpdateUserGrantRequest>;
@@ -5343,6 +6256,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Deactivate User Grant
+         *
+         * Deprecated: [Deactivate an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-deactivate-authorization.api.mdx) to disable a user's access to an owned or granted project.
+         *
+         * Deactivate the user grant. The user will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested. An error will be returned if the user grant is already deactivated.
+         */
         readonly deactivateUserGrant: {
             readonly name: "DeactivateUserGrant";
             readonly requestType: MessageFns<DeactivateUserGrantRequest>;
@@ -5357,6 +6277,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Reactivate User Grant
+         *
+         * Deprecated: [Activate an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-activate-authorization.api.mdx) to enable a user's access to an owned or granted project.
+         *
+         * Reactivate a deactivated user grant. The user will be able to use the granted project again. An error will be returned if the user grant is not deactivated.
+         */
         readonly reactivateUserGrant: {
             readonly name: "ReactivateUserGrant";
             readonly requestType: MessageFns<ReactivateUserGrantRequest>;
@@ -5371,6 +6298,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Remove User Grant
+         *
+         * Deprecated: [Delete an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-delete-authorization.api.mdx) to remove a users access to an owned or granted project.
+         *
+         * Removes the user grant from the user. The user will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested.
+         */
         readonly removeUserGrant: {
             readonly name: "RemoveUserGrant";
             readonly requestType: MessageFns<RemoveUserGrantRequest>;
@@ -5385,6 +6319,13 @@ export declare const ManagementServiceDefinition: {
                 };
             };
         };
+        /**
+         * Bulk Remove User Grants
+         *
+         * Deprecated: [Delete authorizations one after the other](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-delete-authorization.api.mdx) to remove access for multiple users on multiple owned or granted projects.
+         *
+         * Remove a list of user grants. The users will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested.
+         */
         readonly bulkRemoveUserGrant: {
             readonly name: "BulkRemoveUserGrant";
             readonly requestType: MessageFns<BulkRemoveUserGrantRequest>;
@@ -7514,189 +8455,1094 @@ export interface ManagementServiceImplementation<CallContextExt = {}> {
     getOIDCInformation(request: GetOIDCInformationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetOIDCInformationResponse>>;
     getIAM(request: GetIAMRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetIAMResponse>>;
     getSupportedLanguages(request: GetSupportedLanguagesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetSupportedLanguagesResponse>>;
-    /** Deprecated: please use user service v2 ListUsers, with InUserIDQuery */
+    /**
+     * User by ID
+     *
+     * Deprecated: use [user service v2 ListUsers with InUserIDQuery](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Returns the full user object (human or machine) including the profile, email, etc.
+     */
     getUserByID(request: GetUserByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetUserByIDResponse>>;
-    /** Deprecated: please use user service v2 ListUsers, with LoginNameQuery */
+    /**
+     * Get User by login name (globally)
+     *
+     * Deprecated: use [user service v2 ListUsers with LoginNameQuery](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Get a user by login name searched over all organizations. The request only returns data if the login name matches exactly.
+     */
     getUserByLoginNameGlobal(request: GetUserByLoginNameGlobalRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetUserByLoginNameGlobalResponse>>;
-    /** Deprecated: please use user service v2 ListUsers */
+    /**
+     * Search Users
+     *
+     * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Search for users within an organization. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination.
+     */
     listUsers(request: ListUsersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUsersResponse>>;
     listUserChanges(request: ListUserChangesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUserChangesResponse>>;
-    /** Deprecated: please use user service v2 ListUsers, is unique when no user is returned */
+    /**
+     * Check for existing user
+     *
+     * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead, is unique if no user returned.
+     *
+     * Returns if a user with the requested email or username is unique. So you can create the user.
+     */
     isUserUnique(request: IsUserUniqueRequest, context: CallContext & CallContextExt): Promise<DeepPartial<IsUserUniqueResponse>>;
-    /** Deprecated: use ImportHumanUser */
+    /**
+     * Create User (Human)
+     *
+     * Deprecated: use [user service v2 CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) instead.
+     *
+     * Create a new user with the type human. The newly created user will get an initialization email if either the email address is not marked as verified or no password is set. If a password is set the user will not be requested to set a new one on the first login.
+     */
     addHumanUser(request: AddHumanUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddHumanUserResponse>>;
-    /** Deprecated: please use user service v2 AddHumanUser */
+    /**
+     * Create/Import User (Human)
+     *
+     * Deprecated: use [user service v2 UpdateHumanUser](apis/resources/user_service_v2/user-service-update-human-user.api.mdx) instead.
+     *
+     * Create/import a new user with the type human. The newly created user will get an initialization email if either the email address is not marked as verified or no password is set. If a password is set the user will not be requested to set a new one on the first login.
+     */
     importHumanUser(request: ImportHumanUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ImportHumanUserResponse>>;
+    /**
+     * Create User (Machine)
+     *
+     * Deprecated: use [user service v2 CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) instead.
+     *
+     * Create a new user with the type machine for your API, service or device. These users are used for non-interactive authentication flows.
+     */
     addMachineUser(request: AddMachineUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddMachineUserResponse>>;
-    /** Deprecated: please use user service v2 DeactivateUser */
+    /**
+     * Deactivate User
+     *
+     * Deprecated: use [user service v2 DeactivateUser](apis/resources/user_service_v2/user-service-deactivate-user.api.mdx) instead.
+     *
+     * The state of the user will be changed to 'deactivated'. The user will not be able to log in anymore.
+     * The endpoint returns an error if the user is already in the state 'deactivated'.
+     * Use deactivate user when the user should not be able to use the account anymore, but you still need access to the user data.
+     */
     deactivateUser(request: DeactivateUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeactivateUserResponse>>;
-    /** Deprecated: please use user service v2 ReactivateUser */
+    /**
+     * Deactivate User
+     *
+     * Deprecated: use [user service v2 ReactivateUser](apis/resources/user_service_v2/user-service-reactivate-user.api.mdx) instead.
+     *
+     * Reactivate a user with the state 'deactivated'. The user will be able to log in again afterward.
+     * The endpoint returns an error if the user is not in the state 'deactivated'.
+     */
     reactivateUser(request: ReactivateUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ReactivateUserResponse>>;
-    /** Deprecated: please use user service v2 LockUser */
+    /**
+     * Lock User
+     *
+     * Deprecated: use [user service v2 LockUser](apis/resources/user_service_v2/user-service-lock-user.api.mdx) instead.
+     *
+     * The state of the user will be changed to 'locked'. The user will not be able to log in anymore.
+     * The endpoint returns an error if the user is already in the state 'locked'.
+     * Use this endpoint if the user should not be able to log in temporarily because of an event that happened (wrong password, etc.).
+     */
     lockUser(request: LockUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<LockUserResponse>>;
-    /** Deprecated: please use user service v2 UnlockUser */
+    /**
+     * Unlock User
+     *
+     * Deprecated: use [user service v2 UnlockUser](apis/resources/user_service_v2/user-service-unlock-user.api.mdx) instead.
+     *
+     * Unlock a user with the state 'locked'. The user will be able to log in again afterward.
+     * The endpoint returns an error if the user is not in the state 'locked'.
+     */
     unlockUser(request: UnlockUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UnlockUserResponse>>;
-    /** Deprecated: please use user service v2 RemoveUser */
+    /**
+     * Unlock User
+     *
+     * Deprecated: use [user service v2 DeleteUser](apis/resources/user_service_v2/user-service-delete-user.api.mdx) instead.
+     *
+     * The state of the user will be changed to 'deleted'. The user will not be able to log in anymore. Endpoints requesting this user will return an error 'User not found.
+     */
     removeUser(request: RemoveUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveUserResponse>>;
-    /** Deprecated: please use user service v2 UpdateHumanUser */
+    /**
+     * Change user name
+     *
+     * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
+     * Change the username of the user. Be aware that the user has to log in with the newly added username afterward.
+     */
     updateUserName(request: UpdateUserNameRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateUserNameResponse>>;
+    /**
+     * Set User Metadata
+     *
+     * Deprecated: use [SetUserMetadata](apis/resources/user_service_v2/user-service-set-user-metadata.api.mdx) instead.
+     *
+     * This endpoint either adds or updates a metadata value for the requested key. Make sure the value is base64 encoded.
+     */
     setUserMetadata(request: SetUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetUserMetadataResponse>>;
+    /**
+     * Bulk Set User Metadata
+     *
+     * Deprecated: use [SetUserMetadata](apis/resources/user_service_v2/user-service-set-user-metadata.api.mdx) instead.
+     *
+     * Add or update multiple metadata values for a user. Make sure the values are base64 encoded.
+     */
     bulkSetUserMetadata(request: BulkSetUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<BulkSetUserMetadataResponse>>;
+    /**
+     * Search User Metadata
+     *
+     * Deprecated: use [ListUserMetadata](apis/resources/user_service_v2/user-service-list-user-metadata.api.mdx) instead.
+     *
+     * Get the metadata of a user filtered by your query.
+     */
     listUserMetadata(request: ListUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUserMetadataResponse>>;
+    /**
+     * Get User Metadata By Key
+     *
+     * Deprecated: use [ListUserMetadata](apis/resources/user_service_v2/user-service-list-user-metadata.api.mdx) instead.
+     *
+     * Get a metadata object from a user by a specific key.
+     */
     getUserMetadata(request: GetUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetUserMetadataResponse>>;
+    /**
+     * Delete User Metadata By Key
+     *
+     * Deprecated: use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx) instead.
+     *
+     * Get a metadata object from a user by a specific key.
+     */
     removeUserMetadata(request: RemoveUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveUserMetadataResponse>>;
+    /**
+     * Delete User Metadata By Key
+     *
+     * Deprecated: use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx) instead.
+     *
+     * Remove a list of metadata objects from a user with a list of keys.
+     */
     bulkRemoveUserMetadata(request: BulkRemoveUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<BulkRemoveUserMetadataResponse>>;
-    /** Deprecated: please use user service v2 GetUserByID */
+    /**
+     * Get User Profile (Human)
+     *
+     * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+     *
+     * Get basic information like first_name and last_name of a user.
+     */
     getHumanProfile(request: GetHumanProfileRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetHumanProfileResponse>>;
-    /** Deprecated: please use user service v2 UpdateHumanUser */
+    /**
+     * Update User Profile (Human)
+     *
+     * Deprecated: use [user service v2 UpdateHumanUser](apis/resources/user_service_v2/user-service-update-human-user.api.mdx) instead.
+     *
+     * Update the profile information from a user. The profile includes basic information like first_name and last_name.
+     */
     updateHumanProfile(request: UpdateHumanProfileRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateHumanProfileResponse>>;
-    /** Deprecated: please use user service v2 GetUserByID */
+    /**
+     * Get User Email (Human)
+     *
+     * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+     *
+     * Get the email address and the verification state of the address.
+     */
     getHumanEmail(request: GetHumanEmailRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetHumanEmailResponse>>;
-    /** Deprecated: please use user service v2 SetEmail */
+    /**
+     * Update User Email (Human)
+     *
+     * Deprecated: use [user service v2 SetEmail](apis/resources/user_service_v2/user-service-set-email.api.mdx) instead.
+     *
+     * Change the email address of a user. If the state is set to not verified, the user will get a verification email.
+     */
     updateHumanEmail(request: UpdateHumanEmailRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateHumanEmailResponse>>;
     /**
-     * Deprecated: not used anymore in user state
-     * To resend a verification email use the user service v2 ResendEmailCode
+     * Resend User Initialization Email
+     *
+     * Deprecated: not used anymore in user state so will be removed.
+     *
+     * A newly created user will get an initialization email to verify the email address and set a password. Resend the email with this request to the user's email address, or a newly added address.
      */
     resendHumanInitialization(request: ResendHumanInitializationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ResendHumanInitializationResponse>>;
-    /** Deprecated: please use user service v2 ResendEmailCode */
+    /**
+     * Resend User Email Verification
+     *
+     * Deprecated: use [user service v2 ResendEmailCode](apis/resources/user_service_v2/user-service-resend-email-code.api.mdx) instead.
+     *
+     * Resend the email verification notification to the given email address of the user.
+     */
     resendHumanEmailVerification(request: ResendHumanEmailVerificationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ResendHumanEmailVerificationResponse>>;
-    /** Deprecated: please use user service v2 GetUserByID */
+    /**
+     * Get User Phone (Human)
+     *
+     * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+     *
+     * Get the phone number and the verification state of the number. The phone number is only for informational purposes and to send messages, not for Authentication (2FA).
+     */
     getHumanPhone(request: GetHumanPhoneRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetHumanPhoneResponse>>;
-    /** Deprecated: please use user service v2 SetPhone */
+    /**
+     * Update User Phone (Human)
+     *
+     * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
+     * Change the phone number of a user. If the state is set to not verified, the user will get an SMS to verify (if a notification provider is configured). The phone number is only for informational purposes and to send messages, not for Authentication (2FA).
+     */
     updateHumanPhone(request: UpdateHumanPhoneRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateHumanPhoneResponse>>;
-    /** Deprecated: please use user service v2 SetPhone */
+    /**
+     * Remove User Phone (Human)
+     *
+     * Deprecated: use user service v2 [user service v2 SetPhone](apis/resources/user_service_v2/user-service-set-phone.api.mdx) instead.
+     *
+     * Remove the configured phone number of a user.
+     */
     removeHumanPhone(request: RemoveHumanPhoneRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanPhoneResponse>>;
-    /** Deprecated: please use user service v2 ResendPhoneCode */
+    /**
+     * Resend User Phone Verification
+     *
+     * Deprecated: use user service v2 [user service v2 ResendPhoneCode](apis/resources/user_service_v2/user-service-resend-phone-code.api.mdx) instead.
+     *
+     * Resend the notification for the verification of the phone number, to the number stored on the user.
+     */
     resendHumanPhoneVerification(request: ResendHumanPhoneVerificationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ResendHumanPhoneVerificationResponse>>;
+    /**
+     * Delete User Avatar (Human)
+     *
+     * Removes the avatar that is currently set on the user.
+     */
     removeHumanAvatar(request: RemoveHumanAvatarRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanAvatarResponse>>;
-    /** Deprecated: please use user service v2 SetPassword */
+    /**
+     * Set Human Initial Password
+     *
+     * Deprecated: use [user service v2 SetPassword](apis/resources/user_service_v2/user-service-set-password.api.mdx) instead.
+     */
     setHumanInitialPassword(request: SetHumanInitialPasswordRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetHumanInitialPasswordResponse>>;
-    /** Deprecated: please use user service v2 SetPassword */
+    /**
+     * Set User Password
+     *
+     * Deprecated: use [user service v2 SetPassword](apis/resources/user_service_v2/user-service-set-password.api.mdx) instead.
+     */
     setHumanPassword(request: SetHumanPasswordRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetHumanPasswordResponse>>;
-    /** Deprecated: please use user service v2 PasswordReset */
+    /**
+     * Send Reset Password Notification
+     *
+     * Deprecated: use [user service v2 PasswordReset](apis/resources/user_service_v2/user-service-password-reset.api.mdx) instead.
+     *
+     * The user will receive an email with a link to change the password.
+     */
     sendHumanResetPasswordNotification(request: SendHumanResetPasswordNotificationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SendHumanResetPasswordNotificationResponse>>;
-    /** Deprecated: please use user service v2 ListAuthenticationMethodTypes */
+    /**
+     * Get User Authentication Factors (2FA/MFA)
+     *
+     * Deprecated: use [user service v2 ListAuthenticationMethodTypes](apis/resources/user_service_v2/user-service-list-authentication-method-types.api.mdx) instead.
+     *
+     * Get a list of authentication factors the user has set. Including Second Factors (2FA) and Multi-Factors (MFA).
+     */
     listHumanAuthFactors(request: ListHumanAuthFactorsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListHumanAuthFactorsResponse>>;
-    /** Deprecated: please use user service v2 RemoveTOTP */
+    /**
+     * Remove Multi-Factor OTP
+     *
+     * Deprecated: use [user service v2 RemoveTOTP](apis/resources/user_service_v2/user-service-remove-totp.api.mdx) instead.
+     *
+     * Remove the configured One-Time Password (OTP) as a factor from the user. OTP is an authentication app, like Authy or Google/Microsoft Authenticator.
+     */
     removeHumanAuthFactorOTP(request: RemoveHumanAuthFactorOTPRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanAuthFactorOTPResponse>>;
-    /** Deprecated: please use user service v2 RemoveU2F */
+    /**
+     * Remove Multi-Factor U2F
+     *
+     * Deprecated: use [user service v2 RemoveU2F](apis/resources/user_service_v2/user-service-remove-u-2-f.api.mdx) instead.
+     *
+     * Remove the configured Universal Second Factor (U2F) as a factor from the user. U2F is a device-dependent factor like FingerPrint, Windows-Hello, etc.
+     */
     removeHumanAuthFactorU2F(request: RemoveHumanAuthFactorU2FRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanAuthFactorU2FResponse>>;
-    /** Deprecated: please use user service v2 RemoveOTPSMS */
+    /**
+     * Remove Multi-Factor OTP SMS
+     *
+     * Deprecated: use [user service v2 RemoveOTPSMS](apis/resources/user_service_v2/user-service-remove-otpsms.api.mdx) instead.
+     *
+     * Remove the configured One-Time Password (OTP) SMS as a factor from the user. As only one OTP SMS per user is allowed, the user will not have OTP SMS as a second factor afterward.
+     */
     removeHumanAuthFactorOTPSMS(request: RemoveHumanAuthFactorOTPSMSRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanAuthFactorOTPSMSResponse>>;
-    /** Deprecated: please use user service v2 RemoveOTPEmail */
+    /**
+     * Remove Multi-Factor OTP Email
+     *
+     * Deprecated: use [user service v2 RemoveOTPEmail](apis/resources/user_service_v2/user-service-remove-otp-email.api.mdx) instead.
+     *
+     * Remove the configured One-Time Password (OTP) Email as a factor from the user. As only one OTP Email per user is allowed, the user will not have OTP Email as a second factor afterward.
+     */
     removeHumanAuthFactorOTPEmail(request: RemoveHumanAuthFactorOTPEmailRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanAuthFactorOTPEmailResponse>>;
-    /** Deprecated: please use user service v2 ListPasskeys */
+    /**
+     * Search Passwordless/Passkey authentication
+     *
+     * Deprecated: use [user service v2 ListPasskeys](apis/resources/user_service_v2/user-service-list-passkeys.api.mdx) instead.
+     *
+     * Get a list of configured passwordless/passkey authentication methods from the user. Passwordless/passkey is a device-dependent authentication like FingerScan, WindowsHello or a Hardware Token.
+     */
     listHumanPasswordless(request: ListHumanPasswordlessRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListHumanPasswordlessResponse>>;
-    /** Deprecated: please use user service v2 RegisterPasskey */
+    /**
+     * Add Passwordless/Passkey Registration Link
+     *
+     * Deprecated: use [user service v2 RegisterPasskey](apis/resources/user_service_v2/user-service-register-passkey.api.mdx) instead.
+     *
+     * Adds a new passwordless/passkey authenticator link to the user and returns it in the response. The link enables the user to register a new device if current passwordless/passkey devices are all platform authenticators. e.g. User has already registered Windows Hello and wants to register FaceID on the iPhone.
+     */
     addPasswordlessRegistration(request: AddPasswordlessRegistrationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddPasswordlessRegistrationResponse>>;
-    /** Deprecated: please use user service v2 RegisterPasskey */
+    /**
+     * Send Passwordless/Passkey Registration Link
+     *
+     * Deprecated: use [user service v2 RegisterPasskey](apis/resources/user_service_v2/user-service-register-passkey.api.mdx) instead.
+     *
+     * Adds a new passwordless/passkey authenticator link to the user and sends it to the user per email. The link enables the user to register a new device if current passwordless/passkey devices are all platform authenticators. e.g. User has already registered Windows Hello and wants to register FaceID on the iPhone.
+     */
     sendPasswordlessRegistration(request: SendPasswordlessRegistrationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SendPasswordlessRegistrationResponse>>;
-    /** Deprecated: please use user service v2 RemovePasskey */
+    /**
+     * Delete Passwordless/Passkey
+     *
+     * Deprecated: use [user service v2 RemovePasskey](apis/resources/user_service_v2/user-service-remove-passkey.api.mdx) instead.
+     *
+     * Remove a configured passwordless/passkey authentication method from the user. (e.g FaceID, FingerScane, WindowsHello, etc.).
+     */
     removeHumanPasswordless(request: RemoveHumanPasswordlessRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanPasswordlessResponse>>;
+    /**
+     * Update Machine User
+     *
+     * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
+     * Change a service account/machine user. It is used for accounts with non-interactive authentication possibilities.
+     */
     updateMachine(request: UpdateMachineRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateMachineResponse>>;
+    /**
+     * Create Secret for Machine User
+     *
+     * Deprecated: use [user service v2 AddSecret](apis/resources/user_service_v2/user-service-add-secret.api.mdx) instead.
+     *
+     * Create a new secret for a machine user/service account. It is used to authenticate the user (client credential grant).
+     */
     generateMachineSecret(request: GenerateMachineSecretRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GenerateMachineSecretResponse>>;
+    /**
+     * Delete Secret of Machine User
+     *
+     * Deprecated: use [user service v2 RemoveSecret](apis/resources/user_service_v2/user-service-remove-secret.api.mdx) instead.
+     *
+     * Delete a secret of a machine user/service account. The user will not be able to authenticate with the secret afterward.
+     */
     removeMachineSecret(request: RemoveMachineSecretRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveMachineSecretResponse>>;
+    /**
+     * Get Machine user Key By ID
+     *
+     * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Get a specific Key of a machine user by its id. Machine keys are used to authenticate with jwt profile authentication.
+     */
     getMachineKeyByIDs(request: GetMachineKeyByIDsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetMachineKeyByIDsResponse>>;
+    /**
+     * List Machine Keys
+     *
+     * Deprecated: use [user service v2 ListKeys](apis/resources/user_service_v2/user-service-list-keys.api.mdx) instead.
+     *
+     * Get the list of keys of a machine user. Machine keys are used to authenticate with jwt profile authentication.
+     */
     listMachineKeys(request: ListMachineKeysRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListMachineKeysResponse>>;
+    /**
+     * Create Key for machine user
+     *
+     * Deprecated: use [user service v2 AddKey](apis/resources/user_service_v2/user-service-add-key.api.mdx) instead.
+     *
+     * If a public key is not supplied, a new key is generated and will be returned in the response.
+     * Make sure to store the returned key.
+     * If an RSA public key is supplied, the private key is omitted from the response.
+     * Machine keys are used to authenticate with jwt profile.
+     */
     addMachineKey(request: AddMachineKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddMachineKeyResponse>>;
+    /**
+     * Delete Key for machine user
+     *
+     * Deprecated: use [user service v2 RemoveKey](apis/resources/user_service_v2/user-service-remove-key.api.mdx) instead.
+     *
+     * Delete a specific key from a user.
+     * The user will not be able to authenticate with that key afterward.
+     */
     removeMachineKey(request: RemoveMachineKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveMachineKeyResponse>>;
+    /**
+     * Get Personal-Access-Token (PAT) by ID
+     *
+     * Deprecated: use [user service v2 ListPersonalAccessTokens](apis/resources/user_service_v2/user-service-list-personal-access-tokens.api.mdx) instead.
+     *
+     * Returns the PAT for a user, currently only available for machine users/service accounts. PATs are ready-to-use tokens and can be sent directly in the authentication header.
+     */
     getPersonalAccessTokenByIDs(request: GetPersonalAccessTokenByIDsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetPersonalAccessTokenByIDsResponse>>;
+    /**
+     * List Personal-Access-Tokens (PATs)
+     *
+     * Deprecated: use [user service v2 ListPersonalAccessTokens](apis/resources/user_service_v2/user-service-list-personal-access-tokens.api.mdx) instead.
+     *
+     * Returns a list of PATs for a user, currently only available for machine users/service accounts. PATs are ready-to-use tokens and can be sent directly in the authentication header.
+     */
     listPersonalAccessTokens(request: ListPersonalAccessTokensRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListPersonalAccessTokensResponse>>;
+    /**
+     * Create a Personal-Access-Token (PAT)
+     *
+     * Deprecated: use [user service v2 AddPersonalAccessToken](apis/resources/user_service_v2/user-service-add-personal-access-token.api.mdx) instead.
+     *
+     * Generates a new PAT for the user. Currently only available for machine users.
+     * The token will be returned in the response, make sure to store it.
+     * PATs are ready-to-use tokens and can be sent directly in the authentication header.
+     */
     addPersonalAccessToken(request: AddPersonalAccessTokenRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddPersonalAccessTokenResponse>>;
+    /**
+     * Remove a Personal-Access-Token (PAT) by ID
+     *
+     * Deprecated: use [user service v2 RemovePersonalAccessToken](apis/resources/user_service_v2/user-service-remove-personal-access-token.api.mdx) instead.
+     *
+     * Delete a PAT from a user. Afterward, the user will not be able to authenticate with that token anymore.
+     */
     removePersonalAccessToken(request: RemovePersonalAccessTokenRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemovePersonalAccessTokenResponse>>;
-    /** Deprecated: please use user service v2 ListLinkedIDPs */
+    /**
+     * List Social Logins
+     *
+     * Deprecated: use [user service v2 ListLinkedIDPs](apis/resources/user_service_v2/user-service-list-idp-links.api.mdx) instead.
+     *
+     * Returns a list of all linked identity providers/social logins of the user. (e. Google, Microsoft, AzureAD, etc.).
+     */
     listHumanLinkedIDPs(request: ListHumanLinkedIDPsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListHumanLinkedIDPsResponse>>;
-    /** Deprecated: please use user service v2 RemoveLinkedIDP */
+    /**
+     * Remove Social Login
+     *
+     * Deprecated: use [user service v2 RemoveIDPLink](apis/resources/user_service_v2/user-service-remove-idp-link.api.mdx) instead.
+     *
+     * Remove a configured social logins/identity providers of the user (e.g. Google, Microsoft, AzureAD, etc.). The user will not be able to log in with the given provider afterward. Make sure the user does have other possibilities to authenticate.
+     */
     removeHumanLinkedIDP(request: RemoveHumanLinkedIDPRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveHumanLinkedIDPResponse>>;
+    /**
+     * List ZITADEL Permissions
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Show all the permissions the user has in ZITADEL (ZITADEL Manager).
+     */
     listUserMemberships(request: ListUserMembershipsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUserMembershipsResponse>>;
     getMyOrg(request: GetMyOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetMyOrgResponse>>;
+    /**
+     * Get Organization By Domain
+     *
+     * Deprecated: use [organization v2 service ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Search an organization by the domain, overall organizations. The domain must match exactly.
+     */
     getOrgByDomainGlobal(request: GetOrgByDomainGlobalRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetOrgByDomainGlobalResponse>>;
     listOrgChanges(request: ListOrgChangesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgChangesResponse>>;
+    /**
+     * Create Organization
+     *
+     * Deprecated: use [organization service v2 CreateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-create-organization.api.mdx) instead
+     *
+     * Create a new organization. Based on the given name a domain will be generated to be able to identify users within an organization.
+     */
     addOrg(request: AddOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddOrgResponse>>;
+    /**
+     * Update Organization
+     *
+     * Deprecated: use [organization service v2 UpdateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-update-organization.api.mdx) instead.
+     *
+     * Change the name of the organization.
+     */
     updateOrg(request: UpdateOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateOrgResponse>>;
+    /**
+     * Deactivate Organization
+     *
+     * Deprecated: use [organization service v2 DeactivateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-deactivate-organization.api.mdx) instead.
+     *
+     * Sets the state of my organization to deactivated. Users of this organization will not be able to log in.
+     */
     deactivateOrg(request: DeactivateOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeactivateOrgResponse>>;
+    /**
+     * Reactivate Organization
+     *
+     * Deprecated: use [organization service v2 ActivateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-activate-organization.api.mdx) instead.
+     *
+     * Set the state of my organization to active. The state of the organization has to be deactivated to perform the request. Users of this organization will be able to log in again.
+     */
     reactivateOrg(request: ReactivateOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ReactivateOrgResponse>>;
+    /**
+     * Delete Organization
+     *
+     * Deprecated: use [organization service v2 DeleteOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization.api.mdx) instead.
+     *
+     * Deletes my organization and all its resources (Users, Projects, Grants to and from the org). Users of this organization will not be able to log in.
+     */
     removeOrg(request: RemoveOrgRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveOrgResponse>>;
+    /**
+     * Set Organization Metadata
+     *
+     * Deprecated: use [organization service v2 SetOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-set-organization-metadata.api.mdx) instead.
+     *
+     * This endpoint either adds or updates a metadata value for the requested key. Make sure the value is base64 encoded.
+     */
     setOrgMetadata(request: SetOrgMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetOrgMetadataResponse>>;
+    /**
+     * Bulk Set Organization Metadata
+     *
+     * Deprecated: use [organization service v2 SetOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-set-organization-metadata.api.mdx) instead.
+     *
+     * This endpoint sets a list of metadata to the organization. Make sure the values are base64 encoded.
+     */
     bulkSetOrgMetadata(request: BulkSetOrgMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<BulkSetOrgMetadataResponse>>;
+    /**
+     * Search Organization Metadata
+     *
+     * Deprecated: use [organization service v2 ListOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-metadata.api.mdx) instead.
+     *
+     * Get the metadata of an organization filtered by your query.
+     */
     listOrgMetadata(request: ListOrgMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgMetadataResponse>>;
+    /**
+     * Get Organization Metadata By Key
+     *
+     * Deprecated: use [organization service v2 ListOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-metadata.api.mdx) instead.
+     *
+     * Get a metadata object from an organization by a specific key.
+     */
     getOrgMetadata(request: GetOrgMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetOrgMetadataResponse>>;
+    /**
+     * Delete Organization Metadata By Key
+     *
+     * Deprecated: use [organization service v2 DeleteOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-metadata.api.mdx) instead.
+     *
+     * Remove a metadata object from an organization with a specific key.
+     */
     removeOrgMetadata(request: RemoveOrgMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveOrgMetadataResponse>>;
+    /**
+     * Bulk Delete Metadata
+     *
+     * Deprecated: use [organization service v2 DeleteOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-metadata.api.mdx) instead.
+     *
+     * Remove a list of metadata objects from an organization with a list of keys.
+     */
     bulkRemoveOrgMetadata(request: BulkRemoveOrgMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<BulkRemoveOrgMetadataResponse>>;
-    listOrgDomains(request: ListOrgDomainsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgDomainsResponse>>;
+    /**
+     * Add Domain
+     *
+     * Deprecated: use [organization service v2 AddOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-add-organization-domain.api.mdx) instead.
+     *
+     * Add a new domain to an organization. The domains are used to identify to which organization a user belongs.
+     */
     addOrgDomain(request: AddOrgDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddOrgDomainResponse>>;
+    /**
+     * Search Domains
+     *
+     * Deprecated: use [organization service v2 ListOrganizationDomains](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-domains.api.mdx) instead.
+     *
+     * Returns the list of registered domains of an organization. The domains are used to identify to which organization a user belongs.
+     */
+    listOrgDomains(request: ListOrgDomainsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgDomainsResponse>>;
+    /**
+     * Remove Domain
+     *
+     * Deprecated: use [organization service v2 DeleteOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-domain.api.mdx) instead.
+     *
+     * Delete a new domain from an organization. The domains are used to identify to which organization a user belongs. If the uses use the domain for login, this will not be possible afterwards. They have to use another domain instead.
+     */
     removeOrgDomain(request: RemoveOrgDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveOrgDomainResponse>>;
+    /**
+     * Generate Domain Verification
+     *
+     * Deprecated: use [organization service v2 GenerateOrganizationDomainValidation](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-generate-organization-domain-validation.api.mdx) instead.
+     *
+     * Generate a new file to be able to verify your domain with DNS or HTTP challenge.
+     */
     generateOrgDomainValidation(request: GenerateOrgDomainValidationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GenerateOrgDomainValidationResponse>>;
+    /**
+     * Verify Domain
+     *
+     * Deprecated: use [organization service v2 VerifyOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-verify-organization-domain.api.mdx) instead.
+     *
+     * Make sure you have added the required verification to your domain, depending on the method you have chosen (HTTP or DNS challenge). ZITADEL will check it and set the domain as verified if it was successful. A verify domain has to be unique.
+     */
     validateOrgDomain(request: ValidateOrgDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ValidateOrgDomainResponse>>;
     setPrimaryOrgDomain(request: SetPrimaryOrgDomainRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetPrimaryOrgDomainResponse>>;
     listOrgMemberRoles(request: ListOrgMemberRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgMemberRolesResponse>>;
+    /**
+     * List Organization Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the organization level, matching the search queries. The search queries will be AND linked.
+     */
     listOrgMembers(request: ListOrgMembersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListOrgMembersResponse>>;
+    /**
+     * Add Organization Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list on the organization level with one or multiple roles.
+     */
     addOrgMember(request: AddOrgMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddOrgMemberResponse>>;
+    /**
+     * Update Organization Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateOrgMember(request: UpdateOrgMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateOrgMemberResponse>>;
+    /**
+     * Remove Organization Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an instance level. The user can still have roles on another level (iam, project).
+     */
     removeOrgMember(request: RemoveOrgMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveOrgMemberResponse>>;
+    /**
+     * Get Project By ID
+     *
+     * Deprecated: use [project v2 service GetProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-get-project.api.mdx) instead.
+     *
+     * Returns a project owned by the organization (no granted projects). A Project is a vessel for different applications sharing the same role context.
+     */
     getProjectByID(request: GetProjectByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetProjectByIDResponse>>;
+    /**
+     * Get Granted Project By ID
+     *
+     * Deprecated: use [project v2 service ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a project owned by another organization and granted to my organization. A Project is a vessel for different applications sharing the same role context.
+     */
     getGrantedProjectByID(request: GetGrantedProjectByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetGrantedProjectByIDResponse>>;
+    /**
+     * Search Project
+     *
+     * Deprecated: use [project v2 service ListProjects](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-projects.api.mdx) instead.
+     *
+     * Lists projects my organization is the owner of (no granted projects). A Project is a vessel for different applications sharing the same role context.
+     */
     listProjects(request: ListProjectsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectsResponse>>;
+    /**
+     * Search Granted Project
+     *
+     * Deprecated: use [project v2 service ListProjects](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-projects.api.mdx) instead.
+     *
+     * Lists projects my organization got granted from another organization. A Project is a vessel for different applications sharing the same role context.
+     */
     listGrantedProjects(request: ListGrantedProjectsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListGrantedProjectsResponse>>;
+    /**
+     * Search Granted Project Roles
+     *
+     * Deprecated: use [project v2 service ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Lists the roles a granted projects has. These are the roles, that have been granted by the owner organization to my organization.
+     */
     listGrantedProjectRoles(request: ListGrantedProjectRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListGrantedProjectRolesResponse>>;
     listProjectChanges(request: ListProjectChangesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectChangesResponse>>;
+    /**
+     * Create Project
+     *
+     * Deprecated: use [project v2 service CreateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-create-project.api.mdx) instead.
+     *
+     * Create a new project. A Project is a vessel for different applications sharing the same role context.
+     */
     addProject(request: AddProjectRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddProjectResponse>>;
+    /**
+     * Update Project
+     *
+     * Deprecated: use [project v2 service UpdateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project.api.mdx) instead.
+     *
+     * Update a project and its settings. A Project is a vessel for different applications sharing the same role context.
+     */
     updateProject(request: UpdateProjectRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateProjectResponse>>;
+    /**
+     * Deactivate Project
+     *
+     * Deprecated: use [project v2 service DeactivateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-deactivate-project.api.mdx) instead.
+     *
+     * Set the state of a project to deactivated. Request returns an error if the project is already deactivated.
+     */
     deactivateProject(request: DeactivateProjectRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeactivateProjectResponse>>;
+    /**
+     * Reactivate Project
+     *
+     * Deprecated: use [project v2 service ActivateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-activate-project.api.mdx) instead.
+     *
+     * Set the state of a project to active. Request returns an error if the project is not deactivated.
+     */
     reactivateProject(request: ReactivateProjectRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ReactivateProjectResponse>>;
+    /**
+     * Remove Project
+     *
+     * Deprecated: use [project v2 service DeleteProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-delete-project.api.mdx) instead.
+     *
+     * Set the state of a project to active. Request returns an error if the project is not deactivated.
+     */
     removeProject(request: RemoveProjectRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveProjectResponse>>;
+    /**
+     * Search Project Roles
+     *
+     * Deprecated: use [project v2 service ListProjectRoles](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-roles.api.mdx) instead.
+     *
+     * Returns all roles of a project matching the search query.
+     */
     listProjectRoles(request: ListProjectRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectRolesResponse>>;
+    /**
+     * Add Project Role
+     *
+     * Deprecated: use [project v2 service AddProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-add-project-role.api.mdx) instead.
+     *
+     * Add a new project role to a project. The key must be unique within the project.
+     */
     addProjectRole(request: AddProjectRoleRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddProjectRoleResponse>>;
+    /**
+     * Bulk Add Project Role
+     *
+     * Deprecated: use [project v2 service AddProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-add-project-role.api.mdx) instead.
+     *
+     * Add a list of roles to a project. The keys must be unique within the project.
+     */
     bulkAddProjectRoles(request: BulkAddProjectRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<BulkAddProjectRolesResponse>>;
+    /**
+     * Change Project Role
+     *
+     * Deprecated: use [project v2 service UpdateProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project-role.api.mdx) instead.
+     *
+     * Change a project role. The key is not editable. If a key should change, remove the role and create a new one.
+     */
     updateProjectRole(request: UpdateProjectRoleRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateProjectRoleResponse>>;
+    /**
+     * Remove Project Role
+     *
+     * Deprecated: use [project v2 service RemoveProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-remove-project-role.api.mdx) instead.
+     *
+     * Removes the role from the project and on every resource it has a dependency. This includes project grants and user grants.
+     */
     removeProjectRole(request: RemoveProjectRoleRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveProjectRoleResponse>>;
     listProjectMemberRoles(request: ListProjectMemberRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectMemberRolesResponse>>;
+    /**
+     * List Project Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project level, matching the search queries. The search queries will be AND linked.
+     */
     listProjectMembers(request: ListProjectMembersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectMembersResponse>>;
+    /**
+     * Add Project Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list on the project level with one or multiple roles.
+     */
     addProjectMember(request: AddProjectMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddProjectMemberResponse>>;
+    /**
+     * Update Project Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateProjectMember(request: UpdateProjectMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateProjectMemberResponse>>;
+    /**
+     * Remove Project Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an project level. The user can still have roles on another level (iam, organization).
+     */
     removeProjectMember(request: RemoveProjectMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveProjectMemberResponse>>;
+    /**
+     * Get Application By ID
+     *
+     * Deprecated: Use [GetApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-get-application.api.mdx) instead to fetch an app
+     *
+     * Get an application of any type (OIDC, API, SAML).
+     */
     getAppByID(request: GetAppByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetAppByIDResponse>>;
+    /**
+     * Search Applications
+     *
+     * Deprecated: Use [ListApplications](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-list-applications.api.mdx) instead to list applications
+     *
+     * Returns all applications within a project, that match the query.
+     */
     listApps(request: ListAppsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListAppsResponse>>;
     listAppChanges(request: ListAppChangesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListAppChangesResponse>>;
+    /**
+     * Create Application (OIDC)
+     *
+     * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create an OIDC application.
+     *
+     * Create a new OIDC client. The client id will be generated and returned in the response. Depending on the chosen configuration also a secret will be returned.
+     */
     addOIDCApp(request: AddOIDCAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddOIDCAppResponse>>;
+    /**
+     * Create Application (SAML)
+     *
+     * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create a SAML application.
+     *
+     * Create a new SAML client. Returns an entity ID.
+     */
     addSAMLApp(request: AddSAMLAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddSAMLAppResponse>>;
+    /**
+     * Create Application (API)
+     *
+     * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create an API application
+     *
+     * Create a new API client. The client id will be generated and returned in the response.
+     * Depending on the chosen configuration also a secret will be generated and returned.
+     */
     addAPIApp(request: AddAPIAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddAPIAppResponse>>;
-    /** Changes application */
+    /**
+     * Update Application
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the generic params of an app.
+     *
+     * Update the basic information of an application. This doesn't include information that are dependent on the application type (OIDC, API, SAML)
+     */
     updateApp(request: UpdateAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateAppResponse>>;
+    /**
+     * Update OIDC Application Config
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of an OIDC app.
+     *
+     * Update the OIDC specific configuration of an application.
+     */
     updateOIDCAppConfig(request: UpdateOIDCAppConfigRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateOIDCAppConfigResponse>>;
+    /**
+     * Update SAML Application Config
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of a SAML app.
+     *
+     * Update the SAML specific configuration of an application.
+     */
     updateSAMLAppConfig(request: UpdateSAMLAppConfigRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateSAMLAppConfigResponse>>;
+    /**
+     * Update API Application Config
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of an API app.
+     *
+     * Update the OIDC-specific configuration of an application.
+     */
     updateAPIAppConfig(request: UpdateAPIAppConfigRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateAPIAppConfigResponse>>;
+    /**
+     * Deactivate Application
+     *
+     * Deprecated: Use [DeactivateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-deactivate-application.api.mdx) instead to deactivate an app.
+     *
+     * Set the state of an application to deactivated. It is not possible to request tokens for deactivated apps. Request returns an error if the application is already deactivated.
+     */
     deactivateApp(request: DeactivateAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeactivateAppResponse>>;
+    /**
+     * Reactivate Application
+     *
+     * Deprecated: Use [ReactivateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-reactivate-application.api.mdx) instead to reactivate an app.
+     *
+     * Set the state of an application to active. Request returns an error if the application is not deactivated.
+     */
     reactivateApp(request: ReactivateAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ReactivateAppResponse>>;
+    /**
+     * Remove Application
+     *
+     * Deprecated: Use [DeleteApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-delete-application.api.mdx) instead to delete an app.
+     *
+     * Remove an application. It is not possible to request tokens for removed apps. Request returns an error if the application is already deactivated.
+     */
     removeApp(request: RemoveAppRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveAppResponse>>;
+    /**
+     * Generate New OIDC Client Secret
+     *
+     * Deprecated: Use [RegenerateClientSecret](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-regenerate-client-secret.api.mdx) instead to regenerate an OIDC app client secret.
+     *
+     * Generates a new client secret for the OIDC application, make sure to save the response.
+     */
     regenerateOIDCClientSecret(request: RegenerateOIDCClientSecretRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RegenerateOIDCClientSecretResponse>>;
+    /**
+     * Generate New API Client Secret
+     *
+     * Deprecated: Use [RegenerateClientSecret](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-regenerate-client-secret.api.mdx) instead to regenerate an API app client secret
+     *
+     * Generates a new client secret for the API application, make sure to save the response.
+     */
     regenerateAPIClientSecret(request: RegenerateAPIClientSecretRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RegenerateAPIClientSecretResponse>>;
+    /**
+     * Get Application Key By ID
+     *
+     * Deprecated: Use [GetApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-get-application-key.api.mdx) instead to get an application key.
+     *
+     * Returns an application key. Keys are used for authorizing API Applications.
+     */
     getAppKey(request: GetAppKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetAppKeyResponse>>;
+    /**
+     * List Application Keys
+     *
+     * Deprecated: Use [ListApplicationKeys](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-list-application-keys.api.mdx) instead to list application keys.
+     *
+     * Search application keys. Keys are used for authorizing API Applications.
+     */
     listAppKeys(request: ListAppKeysRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListAppKeysResponse>>;
+    /**
+     * Create Application Key
+     *
+     * Deprecated: Use [CreateApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application-key.api.mdx) instead to create an application key.
+     *
+     * Create a new application key, they are used for authorizing API Applications. Key details will be returned in the response, make sure to save it.
+     */
     addAppKey(request: AddAppKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddAppKeyResponse>>;
+    /**
+     * Delete Application Key
+     *
+     * Deprecated: Use [DeleteApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-delete-application-key.api.mdx) instead to delete an application key.
+     *
+     * Remove an application key. The API application will not be able to authorize with the key anymore.
+     */
     removeAppKey(request: RemoveAppKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveAppKeyResponse>>;
     listProjectGrantChanges(request: ListProjectGrantChangesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectGrantChangesResponse>>;
+    /**
+     * Project Grant By ID
+     *
+     * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a project grant. A project grant is when the organization grants its project to another organization.
+     */
     getProjectGrantByID(request: GetProjectGrantByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetProjectGrantByIDResponse>>;
+    /**
+     * Search Project Grants from Project
+     *
+     * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a list of project grants for a specific project. A project grant is when the organization grants its project to another organization.
+     */
     listProjectGrants(request: ListProjectGrantsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectGrantsResponse>>;
+    /**
+     * Search Project Grants
+     *
+     * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a list of project grants. A project grant is when the organization grants its project to another organization.
+     */
     listAllProjectGrants(request: ListAllProjectGrantsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListAllProjectGrantsResponse>>;
+    /**
+     * Add Project Grant
+     *
+     * Deprecated: use [CreateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-create-project-grant.api.mdx) instead.
+     *
+     * Grant a project to another organization. The project grant will allow the granted organization to access the project and manage the authorizations for its users. Project Grant will be listed in the granted project of the granted organization.
+     */
     addProjectGrant(request: AddProjectGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddProjectGrantResponse>>;
+    /**
+     * Change Project Grant
+     *
+     * Deprecated: use [UpdateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project-grant.api.mdx) instead.
+     *
+     * Change the roles of the project that is granted to another organization. The project grant will allow the granted organization to access the project and manage the authorizations for its users. Project Grant will be listed in the granted project of the granted organization.
+     */
     updateProjectGrant(request: UpdateProjectGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateProjectGrantResponse>>;
+    /**
+     * Deactivate Project Grant
+     *
+     * Deprecated: use [DeactivateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-deactivate-project-grant.api.mdx) instead.
+     *
+     * Set the state of the project grant to deactivated. The grant has to be active to be able to deactivate.
+     */
     deactivateProjectGrant(request: DeactivateProjectGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeactivateProjectGrantResponse>>;
+    /**
+     * Reactivate Project Grant
+     *
+     * Deprecated: use [ActivateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-activate-project-grant.api.mdx) instead.
+     *
+     * Set the state of the project grant to active. The grant has to be deactivated to be able to reactivate.
+     */
     reactivateProjectGrant(request: ReactivateProjectGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ReactivateProjectGrantResponse>>;
+    /**
+     * Remove Project Grant
+     *
+     * Deprecated: use [DeleteProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-delete-project-grant.api.mdx) instead.
+     *
+     * Remove a project grant. All user grants for this project grant will also be removed. A user will not have access to the project afterward (if permissions are checked).
+     */
     removeProjectGrant(request: RemoveProjectGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveProjectGrantResponse>>;
     listProjectGrantMemberRoles(request: ListProjectGrantMemberRolesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectGrantMemberRolesResponse>>;
+    /**
+     * List Project Grant Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project grant level, matching the search queries. The search queries will be AND linked.
+     */
     listProjectGrantMembers(request: ListProjectGrantMembersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListProjectGrantMembersResponse>>;
+    /**
+     * Add Project Grant Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project grant level, matching the search queries. The search queries will be AND linked.
+     */
     addProjectGrantMember(request: AddProjectGrantMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddProjectGrantMemberResponse>>;
+    /**
+     * Update Project Grant Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateProjectGrantMember(request: UpdateProjectGrantMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateProjectGrantMemberResponse>>;
+    /**
+     * Remove Project Grant Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on a project grant level. The user can still have roles on another level (iam, organization, project).
+     */
     removeProjectGrantMember(request: RemoveProjectGrantMemberRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveProjectGrantMemberResponse>>;
+    /**
+     * Get User Grant By ID
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and filter by its ID.
+     *
+     * Returns a user grant per ID. A user grant is a role a user has for a specific project and organization.
+     */
     getUserGrantByID(request: GetUserGrantByIDRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetUserGrantByIDResponse>>;
+    /**
+     * Search User Grants
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter to search for a users grants on owned or granted projects.
+     *
+     * Returns a list of user grants that match the search queries. User grants are the roles users have for a specific project and organization.
+     */
     listUserGrants(request: ListUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUserGrantResponse>>;
+    /**
+     * Add User Grant
+     *
+     * Deprecated: [Add an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-create-authorization.api.mdx) to grant a user access to an owned or granted project.
+     *
+     * Add a user grant for a specific user. User grants are the roles users have for a specific project and organization.
+     */
     addUserGrant(request: AddUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddUserGrantResponse>>;
+    /**
+     * Update User Grant
+     *
+     * Deprecated: [Update an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-update-authorization.api.mdx) to update a user's roles on an owned or granted project.
+     *
+     * Update the roles of a user grant. User grants are the roles users have for a specific project and organization.
+     */
     updateUserGrant(request: UpdateUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateUserGrantResponse>>;
+    /**
+     * Deactivate User Grant
+     *
+     * Deprecated: [Deactivate an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-deactivate-authorization.api.mdx) to disable a user's access to an owned or granted project.
+     *
+     * Deactivate the user grant. The user will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested. An error will be returned if the user grant is already deactivated.
+     */
     deactivateUserGrant(request: DeactivateUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeactivateUserGrantResponse>>;
+    /**
+     * Reactivate User Grant
+     *
+     * Deprecated: [Activate an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-activate-authorization.api.mdx) to enable a user's access to an owned or granted project.
+     *
+     * Reactivate a deactivated user grant. The user will be able to use the granted project again. An error will be returned if the user grant is not deactivated.
+     */
     reactivateUserGrant(request: ReactivateUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ReactivateUserGrantResponse>>;
+    /**
+     * Remove User Grant
+     *
+     * Deprecated: [Delete an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-delete-authorization.api.mdx) to remove a users access to an owned or granted project.
+     *
+     * Removes the user grant from the user. The user will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested.
+     */
     removeUserGrant(request: RemoveUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveUserGrantResponse>>;
+    /**
+     * Bulk Remove User Grants
+     *
+     * Deprecated: [Delete authorizations one after the other](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-delete-authorization.api.mdx) to remove access for multiple users on multiple owned or granted projects.
+     *
+     * Remove a list of user grants. The users will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested.
+     */
     bulkRemoveUserGrant(request: BulkRemoveUserGrantRequest, context: CallContext & CallContextExt): Promise<DeepPartial<BulkRemoveUserGrantResponse>>;
     /** deprecated: please use DomainPolicy instead */
     getOrgIAMPolicy(request: GetOrgIAMPolicyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetOrgIAMPolicyResponse>>;
@@ -7888,189 +9734,1094 @@ export interface ManagementServiceClient<CallOptionsExt = {}> {
     getOIDCInformation(request: DeepPartial<GetOIDCInformationRequest>, options?: CallOptions & CallOptionsExt): Promise<GetOIDCInformationResponse>;
     getIAM(request: DeepPartial<GetIAMRequest>, options?: CallOptions & CallOptionsExt): Promise<GetIAMResponse>;
     getSupportedLanguages(request: DeepPartial<GetSupportedLanguagesRequest>, options?: CallOptions & CallOptionsExt): Promise<GetSupportedLanguagesResponse>;
-    /** Deprecated: please use user service v2 ListUsers, with InUserIDQuery */
+    /**
+     * User by ID
+     *
+     * Deprecated: use [user service v2 ListUsers with InUserIDQuery](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Returns the full user object (human or machine) including the profile, email, etc.
+     */
     getUserByID(request: DeepPartial<GetUserByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetUserByIDResponse>;
-    /** Deprecated: please use user service v2 ListUsers, with LoginNameQuery */
+    /**
+     * Get User by login name (globally)
+     *
+     * Deprecated: use [user service v2 ListUsers with LoginNameQuery](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Get a user by login name searched over all organizations. The request only returns data if the login name matches exactly.
+     */
     getUserByLoginNameGlobal(request: DeepPartial<GetUserByLoginNameGlobalRequest>, options?: CallOptions & CallOptionsExt): Promise<GetUserByLoginNameGlobalResponse>;
-    /** Deprecated: please use user service v2 ListUsers */
+    /**
+     * Search Users
+     *
+     * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Search for users within an organization. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination.
+     */
     listUsers(request: DeepPartial<ListUsersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUsersResponse>;
     listUserChanges(request: DeepPartial<ListUserChangesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUserChangesResponse>;
-    /** Deprecated: please use user service v2 ListUsers, is unique when no user is returned */
+    /**
+     * Check for existing user
+     *
+     * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead, is unique if no user returned.
+     *
+     * Returns if a user with the requested email or username is unique. So you can create the user.
+     */
     isUserUnique(request: DeepPartial<IsUserUniqueRequest>, options?: CallOptions & CallOptionsExt): Promise<IsUserUniqueResponse>;
-    /** Deprecated: use ImportHumanUser */
+    /**
+     * Create User (Human)
+     *
+     * Deprecated: use [user service v2 CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) instead.
+     *
+     * Create a new user with the type human. The newly created user will get an initialization email if either the email address is not marked as verified or no password is set. If a password is set the user will not be requested to set a new one on the first login.
+     */
     addHumanUser(request: DeepPartial<AddHumanUserRequest>, options?: CallOptions & CallOptionsExt): Promise<AddHumanUserResponse>;
-    /** Deprecated: please use user service v2 AddHumanUser */
+    /**
+     * Create/Import User (Human)
+     *
+     * Deprecated: use [user service v2 UpdateHumanUser](apis/resources/user_service_v2/user-service-update-human-user.api.mdx) instead.
+     *
+     * Create/import a new user with the type human. The newly created user will get an initialization email if either the email address is not marked as verified or no password is set. If a password is set the user will not be requested to set a new one on the first login.
+     */
     importHumanUser(request: DeepPartial<ImportHumanUserRequest>, options?: CallOptions & CallOptionsExt): Promise<ImportHumanUserResponse>;
+    /**
+     * Create User (Machine)
+     *
+     * Deprecated: use [user service v2 CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) instead.
+     *
+     * Create a new user with the type machine for your API, service or device. These users are used for non-interactive authentication flows.
+     */
     addMachineUser(request: DeepPartial<AddMachineUserRequest>, options?: CallOptions & CallOptionsExt): Promise<AddMachineUserResponse>;
-    /** Deprecated: please use user service v2 DeactivateUser */
+    /**
+     * Deactivate User
+     *
+     * Deprecated: use [user service v2 DeactivateUser](apis/resources/user_service_v2/user-service-deactivate-user.api.mdx) instead.
+     *
+     * The state of the user will be changed to 'deactivated'. The user will not be able to log in anymore.
+     * The endpoint returns an error if the user is already in the state 'deactivated'.
+     * Use deactivate user when the user should not be able to use the account anymore, but you still need access to the user data.
+     */
     deactivateUser(request: DeepPartial<DeactivateUserRequest>, options?: CallOptions & CallOptionsExt): Promise<DeactivateUserResponse>;
-    /** Deprecated: please use user service v2 ReactivateUser */
+    /**
+     * Deactivate User
+     *
+     * Deprecated: use [user service v2 ReactivateUser](apis/resources/user_service_v2/user-service-reactivate-user.api.mdx) instead.
+     *
+     * Reactivate a user with the state 'deactivated'. The user will be able to log in again afterward.
+     * The endpoint returns an error if the user is not in the state 'deactivated'.
+     */
     reactivateUser(request: DeepPartial<ReactivateUserRequest>, options?: CallOptions & CallOptionsExt): Promise<ReactivateUserResponse>;
-    /** Deprecated: please use user service v2 LockUser */
+    /**
+     * Lock User
+     *
+     * Deprecated: use [user service v2 LockUser](apis/resources/user_service_v2/user-service-lock-user.api.mdx) instead.
+     *
+     * The state of the user will be changed to 'locked'. The user will not be able to log in anymore.
+     * The endpoint returns an error if the user is already in the state 'locked'.
+     * Use this endpoint if the user should not be able to log in temporarily because of an event that happened (wrong password, etc.).
+     */
     lockUser(request: DeepPartial<LockUserRequest>, options?: CallOptions & CallOptionsExt): Promise<LockUserResponse>;
-    /** Deprecated: please use user service v2 UnlockUser */
+    /**
+     * Unlock User
+     *
+     * Deprecated: use [user service v2 UnlockUser](apis/resources/user_service_v2/user-service-unlock-user.api.mdx) instead.
+     *
+     * Unlock a user with the state 'locked'. The user will be able to log in again afterward.
+     * The endpoint returns an error if the user is not in the state 'locked'.
+     */
     unlockUser(request: DeepPartial<UnlockUserRequest>, options?: CallOptions & CallOptionsExt): Promise<UnlockUserResponse>;
-    /** Deprecated: please use user service v2 RemoveUser */
+    /**
+     * Unlock User
+     *
+     * Deprecated: use [user service v2 DeleteUser](apis/resources/user_service_v2/user-service-delete-user.api.mdx) instead.
+     *
+     * The state of the user will be changed to 'deleted'. The user will not be able to log in anymore. Endpoints requesting this user will return an error 'User not found.
+     */
     removeUser(request: DeepPartial<RemoveUserRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveUserResponse>;
-    /** Deprecated: please use user service v2 UpdateHumanUser */
+    /**
+     * Change user name
+     *
+     * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
+     * Change the username of the user. Be aware that the user has to log in with the newly added username afterward.
+     */
     updateUserName(request: DeepPartial<UpdateUserNameRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateUserNameResponse>;
+    /**
+     * Set User Metadata
+     *
+     * Deprecated: use [SetUserMetadata](apis/resources/user_service_v2/user-service-set-user-metadata.api.mdx) instead.
+     *
+     * This endpoint either adds or updates a metadata value for the requested key. Make sure the value is base64 encoded.
+     */
     setUserMetadata(request: DeepPartial<SetUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<SetUserMetadataResponse>;
+    /**
+     * Bulk Set User Metadata
+     *
+     * Deprecated: use [SetUserMetadata](apis/resources/user_service_v2/user-service-set-user-metadata.api.mdx) instead.
+     *
+     * Add or update multiple metadata values for a user. Make sure the values are base64 encoded.
+     */
     bulkSetUserMetadata(request: DeepPartial<BulkSetUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<BulkSetUserMetadataResponse>;
+    /**
+     * Search User Metadata
+     *
+     * Deprecated: use [ListUserMetadata](apis/resources/user_service_v2/user-service-list-user-metadata.api.mdx) instead.
+     *
+     * Get the metadata of a user filtered by your query.
+     */
     listUserMetadata(request: DeepPartial<ListUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUserMetadataResponse>;
+    /**
+     * Get User Metadata By Key
+     *
+     * Deprecated: use [ListUserMetadata](apis/resources/user_service_v2/user-service-list-user-metadata.api.mdx) instead.
+     *
+     * Get a metadata object from a user by a specific key.
+     */
     getUserMetadata(request: DeepPartial<GetUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<GetUserMetadataResponse>;
+    /**
+     * Delete User Metadata By Key
+     *
+     * Deprecated: use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx) instead.
+     *
+     * Get a metadata object from a user by a specific key.
+     */
     removeUserMetadata(request: DeepPartial<RemoveUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveUserMetadataResponse>;
+    /**
+     * Delete User Metadata By Key
+     *
+     * Deprecated: use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx) instead.
+     *
+     * Remove a list of metadata objects from a user with a list of keys.
+     */
     bulkRemoveUserMetadata(request: DeepPartial<BulkRemoveUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<BulkRemoveUserMetadataResponse>;
-    /** Deprecated: please use user service v2 GetUserByID */
+    /**
+     * Get User Profile (Human)
+     *
+     * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+     *
+     * Get basic information like first_name and last_name of a user.
+     */
     getHumanProfile(request: DeepPartial<GetHumanProfileRequest>, options?: CallOptions & CallOptionsExt): Promise<GetHumanProfileResponse>;
-    /** Deprecated: please use user service v2 UpdateHumanUser */
+    /**
+     * Update User Profile (Human)
+     *
+     * Deprecated: use [user service v2 UpdateHumanUser](apis/resources/user_service_v2/user-service-update-human-user.api.mdx) instead.
+     *
+     * Update the profile information from a user. The profile includes basic information like first_name and last_name.
+     */
     updateHumanProfile(request: DeepPartial<UpdateHumanProfileRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateHumanProfileResponse>;
-    /** Deprecated: please use user service v2 GetUserByID */
+    /**
+     * Get User Email (Human)
+     *
+     * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+     *
+     * Get the email address and the verification state of the address.
+     */
     getHumanEmail(request: DeepPartial<GetHumanEmailRequest>, options?: CallOptions & CallOptionsExt): Promise<GetHumanEmailResponse>;
-    /** Deprecated: please use user service v2 SetEmail */
+    /**
+     * Update User Email (Human)
+     *
+     * Deprecated: use [user service v2 SetEmail](apis/resources/user_service_v2/user-service-set-email.api.mdx) instead.
+     *
+     * Change the email address of a user. If the state is set to not verified, the user will get a verification email.
+     */
     updateHumanEmail(request: DeepPartial<UpdateHumanEmailRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateHumanEmailResponse>;
     /**
-     * Deprecated: not used anymore in user state
-     * To resend a verification email use the user service v2 ResendEmailCode
+     * Resend User Initialization Email
+     *
+     * Deprecated: not used anymore in user state so will be removed.
+     *
+     * A newly created user will get an initialization email to verify the email address and set a password. Resend the email with this request to the user's email address, or a newly added address.
      */
     resendHumanInitialization(request: DeepPartial<ResendHumanInitializationRequest>, options?: CallOptions & CallOptionsExt): Promise<ResendHumanInitializationResponse>;
-    /** Deprecated: please use user service v2 ResendEmailCode */
+    /**
+     * Resend User Email Verification
+     *
+     * Deprecated: use [user service v2 ResendEmailCode](apis/resources/user_service_v2/user-service-resend-email-code.api.mdx) instead.
+     *
+     * Resend the email verification notification to the given email address of the user.
+     */
     resendHumanEmailVerification(request: DeepPartial<ResendHumanEmailVerificationRequest>, options?: CallOptions & CallOptionsExt): Promise<ResendHumanEmailVerificationResponse>;
-    /** Deprecated: please use user service v2 GetUserByID */
+    /**
+     * Get User Phone (Human)
+     *
+     * Deprecated: use [user service v2 GetUserByID](apis/resources/user_service_v2/user-service-get-user-by-id.api.mdx) instead.
+     *
+     * Get the phone number and the verification state of the number. The phone number is only for informational purposes and to send messages, not for Authentication (2FA).
+     */
     getHumanPhone(request: DeepPartial<GetHumanPhoneRequest>, options?: CallOptions & CallOptionsExt): Promise<GetHumanPhoneResponse>;
-    /** Deprecated: please use user service v2 SetPhone */
+    /**
+     * Update User Phone (Human)
+     *
+     * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
+     * Change the phone number of a user. If the state is set to not verified, the user will get an SMS to verify (if a notification provider is configured). The phone number is only for informational purposes and to send messages, not for Authentication (2FA).
+     */
     updateHumanPhone(request: DeepPartial<UpdateHumanPhoneRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateHumanPhoneResponse>;
-    /** Deprecated: please use user service v2 SetPhone */
+    /**
+     * Remove User Phone (Human)
+     *
+     * Deprecated: use user service v2 [user service v2 SetPhone](apis/resources/user_service_v2/user-service-set-phone.api.mdx) instead.
+     *
+     * Remove the configured phone number of a user.
+     */
     removeHumanPhone(request: DeepPartial<RemoveHumanPhoneRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanPhoneResponse>;
-    /** Deprecated: please use user service v2 ResendPhoneCode */
+    /**
+     * Resend User Phone Verification
+     *
+     * Deprecated: use user service v2 [user service v2 ResendPhoneCode](apis/resources/user_service_v2/user-service-resend-phone-code.api.mdx) instead.
+     *
+     * Resend the notification for the verification of the phone number, to the number stored on the user.
+     */
     resendHumanPhoneVerification(request: DeepPartial<ResendHumanPhoneVerificationRequest>, options?: CallOptions & CallOptionsExt): Promise<ResendHumanPhoneVerificationResponse>;
+    /**
+     * Delete User Avatar (Human)
+     *
+     * Removes the avatar that is currently set on the user.
+     */
     removeHumanAvatar(request: DeepPartial<RemoveHumanAvatarRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanAvatarResponse>;
-    /** Deprecated: please use user service v2 SetPassword */
+    /**
+     * Set Human Initial Password
+     *
+     * Deprecated: use [user service v2 SetPassword](apis/resources/user_service_v2/user-service-set-password.api.mdx) instead.
+     */
     setHumanInitialPassword(request: DeepPartial<SetHumanInitialPasswordRequest>, options?: CallOptions & CallOptionsExt): Promise<SetHumanInitialPasswordResponse>;
-    /** Deprecated: please use user service v2 SetPassword */
+    /**
+     * Set User Password
+     *
+     * Deprecated: use [user service v2 SetPassword](apis/resources/user_service_v2/user-service-set-password.api.mdx) instead.
+     */
     setHumanPassword(request: DeepPartial<SetHumanPasswordRequest>, options?: CallOptions & CallOptionsExt): Promise<SetHumanPasswordResponse>;
-    /** Deprecated: please use user service v2 PasswordReset */
+    /**
+     * Send Reset Password Notification
+     *
+     * Deprecated: use [user service v2 PasswordReset](apis/resources/user_service_v2/user-service-password-reset.api.mdx) instead.
+     *
+     * The user will receive an email with a link to change the password.
+     */
     sendHumanResetPasswordNotification(request: DeepPartial<SendHumanResetPasswordNotificationRequest>, options?: CallOptions & CallOptionsExt): Promise<SendHumanResetPasswordNotificationResponse>;
-    /** Deprecated: please use user service v2 ListAuthenticationMethodTypes */
+    /**
+     * Get User Authentication Factors (2FA/MFA)
+     *
+     * Deprecated: use [user service v2 ListAuthenticationMethodTypes](apis/resources/user_service_v2/user-service-list-authentication-method-types.api.mdx) instead.
+     *
+     * Get a list of authentication factors the user has set. Including Second Factors (2FA) and Multi-Factors (MFA).
+     */
     listHumanAuthFactors(request: DeepPartial<ListHumanAuthFactorsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListHumanAuthFactorsResponse>;
-    /** Deprecated: please use user service v2 RemoveTOTP */
+    /**
+     * Remove Multi-Factor OTP
+     *
+     * Deprecated: use [user service v2 RemoveTOTP](apis/resources/user_service_v2/user-service-remove-totp.api.mdx) instead.
+     *
+     * Remove the configured One-Time Password (OTP) as a factor from the user. OTP is an authentication app, like Authy or Google/Microsoft Authenticator.
+     */
     removeHumanAuthFactorOTP(request: DeepPartial<RemoveHumanAuthFactorOTPRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanAuthFactorOTPResponse>;
-    /** Deprecated: please use user service v2 RemoveU2F */
+    /**
+     * Remove Multi-Factor U2F
+     *
+     * Deprecated: use [user service v2 RemoveU2F](apis/resources/user_service_v2/user-service-remove-u-2-f.api.mdx) instead.
+     *
+     * Remove the configured Universal Second Factor (U2F) as a factor from the user. U2F is a device-dependent factor like FingerPrint, Windows-Hello, etc.
+     */
     removeHumanAuthFactorU2F(request: DeepPartial<RemoveHumanAuthFactorU2FRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanAuthFactorU2FResponse>;
-    /** Deprecated: please use user service v2 RemoveOTPSMS */
+    /**
+     * Remove Multi-Factor OTP SMS
+     *
+     * Deprecated: use [user service v2 RemoveOTPSMS](apis/resources/user_service_v2/user-service-remove-otpsms.api.mdx) instead.
+     *
+     * Remove the configured One-Time Password (OTP) SMS as a factor from the user. As only one OTP SMS per user is allowed, the user will not have OTP SMS as a second factor afterward.
+     */
     removeHumanAuthFactorOTPSMS(request: DeepPartial<RemoveHumanAuthFactorOTPSMSRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanAuthFactorOTPSMSResponse>;
-    /** Deprecated: please use user service v2 RemoveOTPEmail */
+    /**
+     * Remove Multi-Factor OTP Email
+     *
+     * Deprecated: use [user service v2 RemoveOTPEmail](apis/resources/user_service_v2/user-service-remove-otp-email.api.mdx) instead.
+     *
+     * Remove the configured One-Time Password (OTP) Email as a factor from the user. As only one OTP Email per user is allowed, the user will not have OTP Email as a second factor afterward.
+     */
     removeHumanAuthFactorOTPEmail(request: DeepPartial<RemoveHumanAuthFactorOTPEmailRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanAuthFactorOTPEmailResponse>;
-    /** Deprecated: please use user service v2 ListPasskeys */
+    /**
+     * Search Passwordless/Passkey authentication
+     *
+     * Deprecated: use [user service v2 ListPasskeys](apis/resources/user_service_v2/user-service-list-passkeys.api.mdx) instead.
+     *
+     * Get a list of configured passwordless/passkey authentication methods from the user. Passwordless/passkey is a device-dependent authentication like FingerScan, WindowsHello or a Hardware Token.
+     */
     listHumanPasswordless(request: DeepPartial<ListHumanPasswordlessRequest>, options?: CallOptions & CallOptionsExt): Promise<ListHumanPasswordlessResponse>;
-    /** Deprecated: please use user service v2 RegisterPasskey */
+    /**
+     * Add Passwordless/Passkey Registration Link
+     *
+     * Deprecated: use [user service v2 RegisterPasskey](apis/resources/user_service_v2/user-service-register-passkey.api.mdx) instead.
+     *
+     * Adds a new passwordless/passkey authenticator link to the user and returns it in the response. The link enables the user to register a new device if current passwordless/passkey devices are all platform authenticators. e.g. User has already registered Windows Hello and wants to register FaceID on the iPhone.
+     */
     addPasswordlessRegistration(request: DeepPartial<AddPasswordlessRegistrationRequest>, options?: CallOptions & CallOptionsExt): Promise<AddPasswordlessRegistrationResponse>;
-    /** Deprecated: please use user service v2 RegisterPasskey */
+    /**
+     * Send Passwordless/Passkey Registration Link
+     *
+     * Deprecated: use [user service v2 RegisterPasskey](apis/resources/user_service_v2/user-service-register-passkey.api.mdx) instead.
+     *
+     * Adds a new passwordless/passkey authenticator link to the user and sends it to the user per email. The link enables the user to register a new device if current passwordless/passkey devices are all platform authenticators. e.g. User has already registered Windows Hello and wants to register FaceID on the iPhone.
+     */
     sendPasswordlessRegistration(request: DeepPartial<SendPasswordlessRegistrationRequest>, options?: CallOptions & CallOptionsExt): Promise<SendPasswordlessRegistrationResponse>;
-    /** Deprecated: please use user service v2 RemovePasskey */
+    /**
+     * Delete Passwordless/Passkey
+     *
+     * Deprecated: use [user service v2 RemovePasskey](apis/resources/user_service_v2/user-service-remove-passkey.api.mdx) instead.
+     *
+     * Remove a configured passwordless/passkey authentication method from the user. (e.g FaceID, FingerScane, WindowsHello, etc.).
+     */
     removeHumanPasswordless(request: DeepPartial<RemoveHumanPasswordlessRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanPasswordlessResponse>;
+    /**
+     * Update Machine User
+     *
+     * Deprecated: use [user service v2 UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
+     * Change a service account/machine user. It is used for accounts with non-interactive authentication possibilities.
+     */
     updateMachine(request: DeepPartial<UpdateMachineRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateMachineResponse>;
+    /**
+     * Create Secret for Machine User
+     *
+     * Deprecated: use [user service v2 AddSecret](apis/resources/user_service_v2/user-service-add-secret.api.mdx) instead.
+     *
+     * Create a new secret for a machine user/service account. It is used to authenticate the user (client credential grant).
+     */
     generateMachineSecret(request: DeepPartial<GenerateMachineSecretRequest>, options?: CallOptions & CallOptionsExt): Promise<GenerateMachineSecretResponse>;
+    /**
+     * Delete Secret of Machine User
+     *
+     * Deprecated: use [user service v2 RemoveSecret](apis/resources/user_service_v2/user-service-remove-secret.api.mdx) instead.
+     *
+     * Delete a secret of a machine user/service account. The user will not be able to authenticate with the secret afterward.
+     */
     removeMachineSecret(request: DeepPartial<RemoveMachineSecretRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveMachineSecretResponse>;
+    /**
+     * Get Machine user Key By ID
+     *
+     * Deprecated: use [user service v2 ListUsers](apis/resources/user_service_v2/user-service-list-users.api.mdx) instead.
+     *
+     * Get a specific Key of a machine user by its id. Machine keys are used to authenticate with jwt profile authentication.
+     */
     getMachineKeyByIDs(request: DeepPartial<GetMachineKeyByIDsRequest>, options?: CallOptions & CallOptionsExt): Promise<GetMachineKeyByIDsResponse>;
+    /**
+     * List Machine Keys
+     *
+     * Deprecated: use [user service v2 ListKeys](apis/resources/user_service_v2/user-service-list-keys.api.mdx) instead.
+     *
+     * Get the list of keys of a machine user. Machine keys are used to authenticate with jwt profile authentication.
+     */
     listMachineKeys(request: DeepPartial<ListMachineKeysRequest>, options?: CallOptions & CallOptionsExt): Promise<ListMachineKeysResponse>;
+    /**
+     * Create Key for machine user
+     *
+     * Deprecated: use [user service v2 AddKey](apis/resources/user_service_v2/user-service-add-key.api.mdx) instead.
+     *
+     * If a public key is not supplied, a new key is generated and will be returned in the response.
+     * Make sure to store the returned key.
+     * If an RSA public key is supplied, the private key is omitted from the response.
+     * Machine keys are used to authenticate with jwt profile.
+     */
     addMachineKey(request: DeepPartial<AddMachineKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<AddMachineKeyResponse>;
+    /**
+     * Delete Key for machine user
+     *
+     * Deprecated: use [user service v2 RemoveKey](apis/resources/user_service_v2/user-service-remove-key.api.mdx) instead.
+     *
+     * Delete a specific key from a user.
+     * The user will not be able to authenticate with that key afterward.
+     */
     removeMachineKey(request: DeepPartial<RemoveMachineKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveMachineKeyResponse>;
+    /**
+     * Get Personal-Access-Token (PAT) by ID
+     *
+     * Deprecated: use [user service v2 ListPersonalAccessTokens](apis/resources/user_service_v2/user-service-list-personal-access-tokens.api.mdx) instead.
+     *
+     * Returns the PAT for a user, currently only available for machine users/service accounts. PATs are ready-to-use tokens and can be sent directly in the authentication header.
+     */
     getPersonalAccessTokenByIDs(request: DeepPartial<GetPersonalAccessTokenByIDsRequest>, options?: CallOptions & CallOptionsExt): Promise<GetPersonalAccessTokenByIDsResponse>;
+    /**
+     * List Personal-Access-Tokens (PATs)
+     *
+     * Deprecated: use [user service v2 ListPersonalAccessTokens](apis/resources/user_service_v2/user-service-list-personal-access-tokens.api.mdx) instead.
+     *
+     * Returns a list of PATs for a user, currently only available for machine users/service accounts. PATs are ready-to-use tokens and can be sent directly in the authentication header.
+     */
     listPersonalAccessTokens(request: DeepPartial<ListPersonalAccessTokensRequest>, options?: CallOptions & CallOptionsExt): Promise<ListPersonalAccessTokensResponse>;
+    /**
+     * Create a Personal-Access-Token (PAT)
+     *
+     * Deprecated: use [user service v2 AddPersonalAccessToken](apis/resources/user_service_v2/user-service-add-personal-access-token.api.mdx) instead.
+     *
+     * Generates a new PAT for the user. Currently only available for machine users.
+     * The token will be returned in the response, make sure to store it.
+     * PATs are ready-to-use tokens and can be sent directly in the authentication header.
+     */
     addPersonalAccessToken(request: DeepPartial<AddPersonalAccessTokenRequest>, options?: CallOptions & CallOptionsExt): Promise<AddPersonalAccessTokenResponse>;
+    /**
+     * Remove a Personal-Access-Token (PAT) by ID
+     *
+     * Deprecated: use [user service v2 RemovePersonalAccessToken](apis/resources/user_service_v2/user-service-remove-personal-access-token.api.mdx) instead.
+     *
+     * Delete a PAT from a user. Afterward, the user will not be able to authenticate with that token anymore.
+     */
     removePersonalAccessToken(request: DeepPartial<RemovePersonalAccessTokenRequest>, options?: CallOptions & CallOptionsExt): Promise<RemovePersonalAccessTokenResponse>;
-    /** Deprecated: please use user service v2 ListLinkedIDPs */
+    /**
+     * List Social Logins
+     *
+     * Deprecated: use [user service v2 ListLinkedIDPs](apis/resources/user_service_v2/user-service-list-idp-links.api.mdx) instead.
+     *
+     * Returns a list of all linked identity providers/social logins of the user. (e. Google, Microsoft, AzureAD, etc.).
+     */
     listHumanLinkedIDPs(request: DeepPartial<ListHumanLinkedIDPsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListHumanLinkedIDPsResponse>;
-    /** Deprecated: please use user service v2 RemoveLinkedIDP */
+    /**
+     * Remove Social Login
+     *
+     * Deprecated: use [user service v2 RemoveIDPLink](apis/resources/user_service_v2/user-service-remove-idp-link.api.mdx) instead.
+     *
+     * Remove a configured social logins/identity providers of the user (e.g. Google, Microsoft, AzureAD, etc.). The user will not be able to log in with the given provider afterward. Make sure the user does have other possibilities to authenticate.
+     */
     removeHumanLinkedIDP(request: DeepPartial<RemoveHumanLinkedIDPRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveHumanLinkedIDPResponse>;
+    /**
+     * List ZITADEL Permissions
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Show all the permissions the user has in ZITADEL (ZITADEL Manager).
+     */
     listUserMemberships(request: DeepPartial<ListUserMembershipsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUserMembershipsResponse>;
     getMyOrg(request: DeepPartial<GetMyOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<GetMyOrgResponse>;
+    /**
+     * Get Organization By Domain
+     *
+     * Deprecated: use [organization v2 service ListOrganizations](apis/resources/org_service_v2/organization-service-list-organizations.api.mdx) instead.
+     *
+     * Search an organization by the domain, overall organizations. The domain must match exactly.
+     */
     getOrgByDomainGlobal(request: DeepPartial<GetOrgByDomainGlobalRequest>, options?: CallOptions & CallOptionsExt): Promise<GetOrgByDomainGlobalResponse>;
     listOrgChanges(request: DeepPartial<ListOrgChangesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgChangesResponse>;
+    /**
+     * Create Organization
+     *
+     * Deprecated: use [organization service v2 CreateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-create-organization.api.mdx) instead
+     *
+     * Create a new organization. Based on the given name a domain will be generated to be able to identify users within an organization.
+     */
     addOrg(request: DeepPartial<AddOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<AddOrgResponse>;
+    /**
+     * Update Organization
+     *
+     * Deprecated: use [organization service v2 UpdateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-update-organization.api.mdx) instead.
+     *
+     * Change the name of the organization.
+     */
     updateOrg(request: DeepPartial<UpdateOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateOrgResponse>;
+    /**
+     * Deactivate Organization
+     *
+     * Deprecated: use [organization service v2 DeactivateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-deactivate-organization.api.mdx) instead.
+     *
+     * Sets the state of my organization to deactivated. Users of this organization will not be able to log in.
+     */
     deactivateOrg(request: DeepPartial<DeactivateOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<DeactivateOrgResponse>;
+    /**
+     * Reactivate Organization
+     *
+     * Deprecated: use [organization service v2 ActivateOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-activate-organization.api.mdx) instead.
+     *
+     * Set the state of my organization to active. The state of the organization has to be deactivated to perform the request. Users of this organization will be able to log in again.
+     */
     reactivateOrg(request: DeepPartial<ReactivateOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<ReactivateOrgResponse>;
+    /**
+     * Delete Organization
+     *
+     * Deprecated: use [organization service v2 DeleteOrganization](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization.api.mdx) instead.
+     *
+     * Deletes my organization and all its resources (Users, Projects, Grants to and from the org). Users of this organization will not be able to log in.
+     */
     removeOrg(request: DeepPartial<RemoveOrgRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveOrgResponse>;
+    /**
+     * Set Organization Metadata
+     *
+     * Deprecated: use [organization service v2 SetOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-set-organization-metadata.api.mdx) instead.
+     *
+     * This endpoint either adds or updates a metadata value for the requested key. Make sure the value is base64 encoded.
+     */
     setOrgMetadata(request: DeepPartial<SetOrgMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<SetOrgMetadataResponse>;
+    /**
+     * Bulk Set Organization Metadata
+     *
+     * Deprecated: use [organization service v2 SetOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-set-organization-metadata.api.mdx) instead.
+     *
+     * This endpoint sets a list of metadata to the organization. Make sure the values are base64 encoded.
+     */
     bulkSetOrgMetadata(request: DeepPartial<BulkSetOrgMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<BulkSetOrgMetadataResponse>;
+    /**
+     * Search Organization Metadata
+     *
+     * Deprecated: use [organization service v2 ListOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-metadata.api.mdx) instead.
+     *
+     * Get the metadata of an organization filtered by your query.
+     */
     listOrgMetadata(request: DeepPartial<ListOrgMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgMetadataResponse>;
+    /**
+     * Get Organization Metadata By Key
+     *
+     * Deprecated: use [organization service v2 ListOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-metadata.api.mdx) instead.
+     *
+     * Get a metadata object from an organization by a specific key.
+     */
     getOrgMetadata(request: DeepPartial<GetOrgMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<GetOrgMetadataResponse>;
+    /**
+     * Delete Organization Metadata By Key
+     *
+     * Deprecated: use [organization service v2 DeleteOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-metadata.api.mdx) instead.
+     *
+     * Remove a metadata object from an organization with a specific key.
+     */
     removeOrgMetadata(request: DeepPartial<RemoveOrgMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveOrgMetadataResponse>;
+    /**
+     * Bulk Delete Metadata
+     *
+     * Deprecated: use [organization service v2 DeleteOrganizationMetadata](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-metadata.api.mdx) instead.
+     *
+     * Remove a list of metadata objects from an organization with a list of keys.
+     */
     bulkRemoveOrgMetadata(request: DeepPartial<BulkRemoveOrgMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<BulkRemoveOrgMetadataResponse>;
-    listOrgDomains(request: DeepPartial<ListOrgDomainsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgDomainsResponse>;
+    /**
+     * Add Domain
+     *
+     * Deprecated: use [organization service v2 AddOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-add-organization-domain.api.mdx) instead.
+     *
+     * Add a new domain to an organization. The domains are used to identify to which organization a user belongs.
+     */
     addOrgDomain(request: DeepPartial<AddOrgDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<AddOrgDomainResponse>;
+    /**
+     * Search Domains
+     *
+     * Deprecated: use [organization service v2 ListOrganizationDomains](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-list-organization-domains.api.mdx) instead.
+     *
+     * Returns the list of registered domains of an organization. The domains are used to identify to which organization a user belongs.
+     */
+    listOrgDomains(request: DeepPartial<ListOrgDomainsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgDomainsResponse>;
+    /**
+     * Remove Domain
+     *
+     * Deprecated: use [organization service v2 DeleteOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-delete-organization-domain.api.mdx) instead.
+     *
+     * Delete a new domain from an organization. The domains are used to identify to which organization a user belongs. If the uses use the domain for login, this will not be possible afterwards. They have to use another domain instead.
+     */
     removeOrgDomain(request: DeepPartial<RemoveOrgDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveOrgDomainResponse>;
+    /**
+     * Generate Domain Verification
+     *
+     * Deprecated: use [organization service v2 GenerateOrganizationDomainValidation](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-generate-organization-domain-validation.api.mdx) instead.
+     *
+     * Generate a new file to be able to verify your domain with DNS or HTTP challenge.
+     */
     generateOrgDomainValidation(request: DeepPartial<GenerateOrgDomainValidationRequest>, options?: CallOptions & CallOptionsExt): Promise<GenerateOrgDomainValidationResponse>;
+    /**
+     * Verify Domain
+     *
+     * Deprecated: use [organization service v2 VerifyOrganizationDomain](apis/resources/org_service_v2beta/zitadel-org-v-2-beta-organization-service-verify-organization-domain.api.mdx) instead.
+     *
+     * Make sure you have added the required verification to your domain, depending on the method you have chosen (HTTP or DNS challenge). ZITADEL will check it and set the domain as verified if it was successful. A verify domain has to be unique.
+     */
     validateOrgDomain(request: DeepPartial<ValidateOrgDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<ValidateOrgDomainResponse>;
     setPrimaryOrgDomain(request: DeepPartial<SetPrimaryOrgDomainRequest>, options?: CallOptions & CallOptionsExt): Promise<SetPrimaryOrgDomainResponse>;
     listOrgMemberRoles(request: DeepPartial<ListOrgMemberRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgMemberRolesResponse>;
+    /**
+     * List Organization Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the organization level, matching the search queries. The search queries will be AND linked.
+     */
     listOrgMembers(request: DeepPartial<ListOrgMembersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListOrgMembersResponse>;
+    /**
+     * Add Organization Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list on the organization level with one or multiple roles.
+     */
     addOrgMember(request: DeepPartial<AddOrgMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<AddOrgMemberResponse>;
+    /**
+     * Update Organization Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateOrgMember(request: DeepPartial<UpdateOrgMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateOrgMemberResponse>;
+    /**
+     * Remove Organization Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an instance level. The user can still have roles on another level (iam, project).
+     */
     removeOrgMember(request: DeepPartial<RemoveOrgMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveOrgMemberResponse>;
+    /**
+     * Get Project By ID
+     *
+     * Deprecated: use [project v2 service GetProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-get-project.api.mdx) instead.
+     *
+     * Returns a project owned by the organization (no granted projects). A Project is a vessel for different applications sharing the same role context.
+     */
     getProjectByID(request: DeepPartial<GetProjectByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetProjectByIDResponse>;
+    /**
+     * Get Granted Project By ID
+     *
+     * Deprecated: use [project v2 service ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a project owned by another organization and granted to my organization. A Project is a vessel for different applications sharing the same role context.
+     */
     getGrantedProjectByID(request: DeepPartial<GetGrantedProjectByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetGrantedProjectByIDResponse>;
+    /**
+     * Search Project
+     *
+     * Deprecated: use [project v2 service ListProjects](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-projects.api.mdx) instead.
+     *
+     * Lists projects my organization is the owner of (no granted projects). A Project is a vessel for different applications sharing the same role context.
+     */
     listProjects(request: DeepPartial<ListProjectsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectsResponse>;
+    /**
+     * Search Granted Project
+     *
+     * Deprecated: use [project v2 service ListProjects](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-projects.api.mdx) instead.
+     *
+     * Lists projects my organization got granted from another organization. A Project is a vessel for different applications sharing the same role context.
+     */
     listGrantedProjects(request: DeepPartial<ListGrantedProjectsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListGrantedProjectsResponse>;
+    /**
+     * Search Granted Project Roles
+     *
+     * Deprecated: use [project v2 service ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Lists the roles a granted projects has. These are the roles, that have been granted by the owner organization to my organization.
+     */
     listGrantedProjectRoles(request: DeepPartial<ListGrantedProjectRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListGrantedProjectRolesResponse>;
     listProjectChanges(request: DeepPartial<ListProjectChangesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectChangesResponse>;
+    /**
+     * Create Project
+     *
+     * Deprecated: use [project v2 service CreateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-create-project.api.mdx) instead.
+     *
+     * Create a new project. A Project is a vessel for different applications sharing the same role context.
+     */
     addProject(request: DeepPartial<AddProjectRequest>, options?: CallOptions & CallOptionsExt): Promise<AddProjectResponse>;
+    /**
+     * Update Project
+     *
+     * Deprecated: use [project v2 service UpdateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project.api.mdx) instead.
+     *
+     * Update a project and its settings. A Project is a vessel for different applications sharing the same role context.
+     */
     updateProject(request: DeepPartial<UpdateProjectRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateProjectResponse>;
+    /**
+     * Deactivate Project
+     *
+     * Deprecated: use [project v2 service DeactivateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-deactivate-project.api.mdx) instead.
+     *
+     * Set the state of a project to deactivated. Request returns an error if the project is already deactivated.
+     */
     deactivateProject(request: DeepPartial<DeactivateProjectRequest>, options?: CallOptions & CallOptionsExt): Promise<DeactivateProjectResponse>;
+    /**
+     * Reactivate Project
+     *
+     * Deprecated: use [project v2 service ActivateProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-activate-project.api.mdx) instead.
+     *
+     * Set the state of a project to active. Request returns an error if the project is not deactivated.
+     */
     reactivateProject(request: DeepPartial<ReactivateProjectRequest>, options?: CallOptions & CallOptionsExt): Promise<ReactivateProjectResponse>;
+    /**
+     * Remove Project
+     *
+     * Deprecated: use [project v2 service DeleteProject](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-delete-project.api.mdx) instead.
+     *
+     * Set the state of a project to active. Request returns an error if the project is not deactivated.
+     */
     removeProject(request: DeepPartial<RemoveProjectRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveProjectResponse>;
+    /**
+     * Search Project Roles
+     *
+     * Deprecated: use [project v2 service ListProjectRoles](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-roles.api.mdx) instead.
+     *
+     * Returns all roles of a project matching the search query.
+     */
     listProjectRoles(request: DeepPartial<ListProjectRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectRolesResponse>;
+    /**
+     * Add Project Role
+     *
+     * Deprecated: use [project v2 service AddProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-add-project-role.api.mdx) instead.
+     *
+     * Add a new project role to a project. The key must be unique within the project.
+     */
     addProjectRole(request: DeepPartial<AddProjectRoleRequest>, options?: CallOptions & CallOptionsExt): Promise<AddProjectRoleResponse>;
+    /**
+     * Bulk Add Project Role
+     *
+     * Deprecated: use [project v2 service AddProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-add-project-role.api.mdx) instead.
+     *
+     * Add a list of roles to a project. The keys must be unique within the project.
+     */
     bulkAddProjectRoles(request: DeepPartial<BulkAddProjectRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<BulkAddProjectRolesResponse>;
+    /**
+     * Change Project Role
+     *
+     * Deprecated: use [project v2 service UpdateProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project-role.api.mdx) instead.
+     *
+     * Change a project role. The key is not editable. If a key should change, remove the role and create a new one.
+     */
     updateProjectRole(request: DeepPartial<UpdateProjectRoleRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateProjectRoleResponse>;
+    /**
+     * Remove Project Role
+     *
+     * Deprecated: use [project v2 service RemoveProjectRole](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-remove-project-role.api.mdx) instead.
+     *
+     * Removes the role from the project and on every resource it has a dependency. This includes project grants and user grants.
+     */
     removeProjectRole(request: DeepPartial<RemoveProjectRoleRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveProjectRoleResponse>;
     listProjectMemberRoles(request: DeepPartial<ListProjectMemberRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectMemberRolesResponse>;
+    /**
+     * List Project Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project level, matching the search queries. The search queries will be AND linked.
+     */
     listProjectMembers(request: DeepPartial<ListProjectMembersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectMembersResponse>;
+    /**
+     * Add Project Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request adds a new user to the members list on the project level with one or multiple roles.
+     */
     addProjectMember(request: DeepPartial<AddProjectMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<AddProjectMemberResponse>;
+    /**
+     * Update Project Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateProjectMember(request: DeepPartial<UpdateProjectMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateProjectMemberResponse>;
+    /**
+     * Remove Project Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on an project level. The user can still have roles on another level (iam, organization).
+     */
     removeProjectMember(request: DeepPartial<RemoveProjectMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveProjectMemberResponse>;
+    /**
+     * Get Application By ID
+     *
+     * Deprecated: Use [GetApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-get-application.api.mdx) instead to fetch an app
+     *
+     * Get an application of any type (OIDC, API, SAML).
+     */
     getAppByID(request: DeepPartial<GetAppByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetAppByIDResponse>;
+    /**
+     * Search Applications
+     *
+     * Deprecated: Use [ListApplications](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-list-applications.api.mdx) instead to list applications
+     *
+     * Returns all applications within a project, that match the query.
+     */
     listApps(request: DeepPartial<ListAppsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListAppsResponse>;
     listAppChanges(request: DeepPartial<ListAppChangesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListAppChangesResponse>;
+    /**
+     * Create Application (OIDC)
+     *
+     * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create an OIDC application.
+     *
+     * Create a new OIDC client. The client id will be generated and returned in the response. Depending on the chosen configuration also a secret will be returned.
+     */
     addOIDCApp(request: DeepPartial<AddOIDCAppRequest>, options?: CallOptions & CallOptionsExt): Promise<AddOIDCAppResponse>;
+    /**
+     * Create Application (SAML)
+     *
+     * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create a SAML application.
+     *
+     * Create a new SAML client. Returns an entity ID.
+     */
     addSAMLApp(request: DeepPartial<AddSAMLAppRequest>, options?: CallOptions & CallOptionsExt): Promise<AddSAMLAppResponse>;
+    /**
+     * Create Application (API)
+     *
+     * Deprecated: Use [CreateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application.api.mdx) instead to create an API application
+     *
+     * Create a new API client. The client id will be generated and returned in the response.
+     * Depending on the chosen configuration also a secret will be generated and returned.
+     */
     addAPIApp(request: DeepPartial<AddAPIAppRequest>, options?: CallOptions & CallOptionsExt): Promise<AddAPIAppResponse>;
-    /** Changes application */
+    /**
+     * Update Application
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the generic params of an app.
+     *
+     * Update the basic information of an application. This doesn't include information that are dependent on the application type (OIDC, API, SAML)
+     */
     updateApp(request: DeepPartial<UpdateAppRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateAppResponse>;
+    /**
+     * Update OIDC Application Config
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of an OIDC app.
+     *
+     * Update the OIDC specific configuration of an application.
+     */
     updateOIDCAppConfig(request: DeepPartial<UpdateOIDCAppConfigRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateOIDCAppConfigResponse>;
+    /**
+     * Update SAML Application Config
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of a SAML app.
+     *
+     * Update the SAML specific configuration of an application.
+     */
     updateSAMLAppConfig(request: DeepPartial<UpdateSAMLAppConfigRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateSAMLAppConfigResponse>;
+    /**
+     * Update API Application Config
+     *
+     * Deprecated: Use [PatchApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-update-application.api.mdx) instead to update the config of an API app.
+     *
+     * Update the OIDC-specific configuration of an application.
+     */
     updateAPIAppConfig(request: DeepPartial<UpdateAPIAppConfigRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateAPIAppConfigResponse>;
+    /**
+     * Deactivate Application
+     *
+     * Deprecated: Use [DeactivateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-deactivate-application.api.mdx) instead to deactivate an app.
+     *
+     * Set the state of an application to deactivated. It is not possible to request tokens for deactivated apps. Request returns an error if the application is already deactivated.
+     */
     deactivateApp(request: DeepPartial<DeactivateAppRequest>, options?: CallOptions & CallOptionsExt): Promise<DeactivateAppResponse>;
+    /**
+     * Reactivate Application
+     *
+     * Deprecated: Use [ReactivateApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-reactivate-application.api.mdx) instead to reactivate an app.
+     *
+     * Set the state of an application to active. Request returns an error if the application is not deactivated.
+     */
     reactivateApp(request: DeepPartial<ReactivateAppRequest>, options?: CallOptions & CallOptionsExt): Promise<ReactivateAppResponse>;
+    /**
+     * Remove Application
+     *
+     * Deprecated: Use [DeleteApplication](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-delete-application.api.mdx) instead to delete an app.
+     *
+     * Remove an application. It is not possible to request tokens for removed apps. Request returns an error if the application is already deactivated.
+     */
     removeApp(request: DeepPartial<RemoveAppRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveAppResponse>;
+    /**
+     * Generate New OIDC Client Secret
+     *
+     * Deprecated: Use [RegenerateClientSecret](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-regenerate-client-secret.api.mdx) instead to regenerate an OIDC app client secret.
+     *
+     * Generates a new client secret for the OIDC application, make sure to save the response.
+     */
     regenerateOIDCClientSecret(request: DeepPartial<RegenerateOIDCClientSecretRequest>, options?: CallOptions & CallOptionsExt): Promise<RegenerateOIDCClientSecretResponse>;
+    /**
+     * Generate New API Client Secret
+     *
+     * Deprecated: Use [RegenerateClientSecret](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-regenerate-client-secret.api.mdx) instead to regenerate an API app client secret
+     *
+     * Generates a new client secret for the API application, make sure to save the response.
+     */
     regenerateAPIClientSecret(request: DeepPartial<RegenerateAPIClientSecretRequest>, options?: CallOptions & CallOptionsExt): Promise<RegenerateAPIClientSecretResponse>;
+    /**
+     * Get Application Key By ID
+     *
+     * Deprecated: Use [GetApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-get-application-key.api.mdx) instead to get an application key.
+     *
+     * Returns an application key. Keys are used for authorizing API Applications.
+     */
     getAppKey(request: DeepPartial<GetAppKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<GetAppKeyResponse>;
+    /**
+     * List Application Keys
+     *
+     * Deprecated: Use [ListApplicationKeys](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-list-application-keys.api.mdx) instead to list application keys.
+     *
+     * Search application keys. Keys are used for authorizing API Applications.
+     */
     listAppKeys(request: DeepPartial<ListAppKeysRequest>, options?: CallOptions & CallOptionsExt): Promise<ListAppKeysResponse>;
+    /**
+     * Create Application Key
+     *
+     * Deprecated: Use [CreateApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-create-application-key.api.mdx) instead to create an application key.
+     *
+     * Create a new application key, they are used for authorizing API Applications. Key details will be returned in the response, make sure to save it.
+     */
     addAppKey(request: DeepPartial<AddAppKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<AddAppKeyResponse>;
+    /**
+     * Delete Application Key
+     *
+     * Deprecated: Use [DeleteApplicationKey](/apis/resources/application_service_v2/zitadel-app-v-2-beta-app-service-delete-application-key.api.mdx) instead to delete an application key.
+     *
+     * Remove an application key. The API application will not be able to authorize with the key anymore.
+     */
     removeAppKey(request: DeepPartial<RemoveAppKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveAppKeyResponse>;
     listProjectGrantChanges(request: DeepPartial<ListProjectGrantChangesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectGrantChangesResponse>;
+    /**
+     * Project Grant By ID
+     *
+     * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a project grant. A project grant is when the organization grants its project to another organization.
+     */
     getProjectGrantByID(request: DeepPartial<GetProjectGrantByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetProjectGrantByIDResponse>;
+    /**
+     * Search Project Grants from Project
+     *
+     * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a list of project grants for a specific project. A project grant is when the organization grants its project to another organization.
+     */
     listProjectGrants(request: DeepPartial<ListProjectGrantsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectGrantsResponse>;
+    /**
+     * Search Project Grants
+     *
+     * Deprecated: use [ListProjectGrants](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-list-project-grants.api.mdx) instead.
+     *
+     * Returns a list of project grants. A project grant is when the organization grants its project to another organization.
+     */
     listAllProjectGrants(request: DeepPartial<ListAllProjectGrantsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListAllProjectGrantsResponse>;
+    /**
+     * Add Project Grant
+     *
+     * Deprecated: use [CreateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-create-project-grant.api.mdx) instead.
+     *
+     * Grant a project to another organization. The project grant will allow the granted organization to access the project and manage the authorizations for its users. Project Grant will be listed in the granted project of the granted organization.
+     */
     addProjectGrant(request: DeepPartial<AddProjectGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<AddProjectGrantResponse>;
+    /**
+     * Change Project Grant
+     *
+     * Deprecated: use [UpdateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-update-project-grant.api.mdx) instead.
+     *
+     * Change the roles of the project that is granted to another organization. The project grant will allow the granted organization to access the project and manage the authorizations for its users. Project Grant will be listed in the granted project of the granted organization.
+     */
     updateProjectGrant(request: DeepPartial<UpdateProjectGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateProjectGrantResponse>;
+    /**
+     * Deactivate Project Grant
+     *
+     * Deprecated: use [DeactivateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-deactivate-project-grant.api.mdx) instead.
+     *
+     * Set the state of the project grant to deactivated. The grant has to be active to be able to deactivate.
+     */
     deactivateProjectGrant(request: DeepPartial<DeactivateProjectGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<DeactivateProjectGrantResponse>;
+    /**
+     * Reactivate Project Grant
+     *
+     * Deprecated: use [ActivateProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-activate-project-grant.api.mdx) instead.
+     *
+     * Set the state of the project grant to active. The grant has to be deactivated to be able to reactivate.
+     */
     reactivateProjectGrant(request: DeepPartial<ReactivateProjectGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<ReactivateProjectGrantResponse>;
+    /**
+     * Remove Project Grant
+     *
+     * Deprecated: use [DeleteProjectGrant](apis/resources/project_service_v2/zitadel-project-v-2-beta-project-service-delete-project-grant.api.mdx) instead.
+     *
+     * Remove a project grant. All user grants for this project grant will also be removed. A user will not have access to the project afterward (if permissions are checked).
+     */
     removeProjectGrant(request: DeepPartial<RemoveProjectGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveProjectGrantResponse>;
     listProjectGrantMemberRoles(request: DeepPartial<ListProjectGrantMemberRolesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectGrantMemberRolesResponse>;
+    /**
+     * List Project Grant Members
+     *
+     * Deprecated: use [ListAdministrators](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-list-administrators.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project grant level, matching the search queries. The search queries will be AND linked.
+     */
     listProjectGrantMembers(request: DeepPartial<ListProjectGrantMembersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListProjectGrantMembersResponse>;
+    /**
+     * Add Project Grant Member
+     *
+     * Deprecated: use [CreateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-create-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request returns all users with memberships on the project grant level, matching the search queries. The search queries will be AND linked.
+     */
     addProjectGrantMember(request: DeepPartial<AddProjectGrantMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<AddProjectGrantMemberResponse>;
+    /**
+     * Update Project Grant Member
+     *
+     * Deprecated: use [UpdateAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-update-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request changes the roles of an existing member. The whole roles list will be updated. Make sure to include roles that you don't want to change (remove).
+     */
     updateProjectGrantMember(request: DeepPartial<UpdateProjectGrantMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateProjectGrantMemberResponse>;
+    /**
+     * Remove Project Grant Member
+     *
+     * Deprecated: use [DeleteAdministrator](apis/resources/internal_permission_service_v2/zitadel-internal-permission-v-2-beta-internal-permission-service-delete-administrator.api.mdx) instead.
+     *
+     * Members are users with permission to administrate ZITADEL on different levels. This request removes a user from the members list on a project grant level. The user can still have roles on another level (iam, organization, project).
+     */
     removeProjectGrantMember(request: DeepPartial<RemoveProjectGrantMemberRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveProjectGrantMemberResponse>;
+    /**
+     * Get User Grant By ID
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and filter by its ID.
+     *
+     * Returns a user grant per ID. A user grant is a role a user has for a specific project and organization.
+     */
     getUserGrantByID(request: DeepPartial<GetUserGrantByIDRequest>, options?: CallOptions & CallOptionsExt): Promise<GetUserGrantByIDResponse>;
+    /**
+     * Search User Grants
+     *
+     * Deprecated: [List authorizations](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-list-authorizations.api.mdx) and pass the user ID filter to search for a users grants on owned or granted projects.
+     *
+     * Returns a list of user grants that match the search queries. User grants are the roles users have for a specific project and organization.
+     */
     listUserGrants(request: DeepPartial<ListUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUserGrantResponse>;
+    /**
+     * Add User Grant
+     *
+     * Deprecated: [Add an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-create-authorization.api.mdx) to grant a user access to an owned or granted project.
+     *
+     * Add a user grant for a specific user. User grants are the roles users have for a specific project and organization.
+     */
     addUserGrant(request: DeepPartial<AddUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<AddUserGrantResponse>;
+    /**
+     * Update User Grant
+     *
+     * Deprecated: [Update an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-update-authorization.api.mdx) to update a user's roles on an owned or granted project.
+     *
+     * Update the roles of a user grant. User grants are the roles users have for a specific project and organization.
+     */
     updateUserGrant(request: DeepPartial<UpdateUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateUserGrantResponse>;
+    /**
+     * Deactivate User Grant
+     *
+     * Deprecated: [Deactivate an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-deactivate-authorization.api.mdx) to disable a user's access to an owned or granted project.
+     *
+     * Deactivate the user grant. The user will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested. An error will be returned if the user grant is already deactivated.
+     */
     deactivateUserGrant(request: DeepPartial<DeactivateUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<DeactivateUserGrantResponse>;
+    /**
+     * Reactivate User Grant
+     *
+     * Deprecated: [Activate an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-activate-authorization.api.mdx) to enable a user's access to an owned or granted project.
+     *
+     * Reactivate a deactivated user grant. The user will be able to use the granted project again. An error will be returned if the user grant is not deactivated.
+     */
     reactivateUserGrant(request: DeepPartial<ReactivateUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<ReactivateUserGrantResponse>;
+    /**
+     * Remove User Grant
+     *
+     * Deprecated: [Delete an authorization](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-delete-authorization.api.mdx) to remove a users access to an owned or granted project.
+     *
+     * Removes the user grant from the user. The user will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested.
+     */
     removeUserGrant(request: DeepPartial<RemoveUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveUserGrantResponse>;
+    /**
+     * Bulk Remove User Grants
+     *
+     * Deprecated: [Delete authorizations one after the other](apis/resources/authorization_service_v2/zitadel-authorization-v-2-beta-authorization-service-delete-authorization.api.mdx) to remove access for multiple users on multiple owned or granted projects.
+     *
+     * Remove a list of user grants. The users will not be able to use the granted project anymore. Also, the roles will not be included in the tokens when requested.
+     */
     bulkRemoveUserGrant(request: DeepPartial<BulkRemoveUserGrantRequest>, options?: CallOptions & CallOptionsExt): Promise<BulkRemoveUserGrantResponse>;
     /** deprecated: please use DomainPolicy instead */
     getOrgIAMPolicy(request: DeepPartial<GetOrgIAMPolicyRequest>, options?: CallOptions & CallOptionsExt): Promise<GetOrgIAMPolicyResponse>;

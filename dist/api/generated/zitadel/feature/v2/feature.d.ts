@@ -18,14 +18,9 @@ export declare function sourceToJSON(object: Source): string;
 export declare enum ImprovedPerformance {
     IMPROVED_PERFORMANCE_UNSPECIFIED = 0,
     /**
-     * IMPROVED_PERFORMANCE_ORG_BY_ID - Uses the eventstore to query the org by id
-     * instead of the sql table.
-     */
-    IMPROVED_PERFORMANCE_ORG_BY_ID = 1,
-    /**
      * IMPROVED_PERFORMANCE_PROJECT_GRANT - Improves performance on write side by using
      * optimized processes to query data to determine
-     * correctnes of data.
+     * correctness of data.
      */
     IMPROVED_PERFORMANCE_PROJECT_GRANT = 2,
     IMPROVED_PERFORMANCE_PROJECT = 3,
@@ -49,8 +44,21 @@ export interface ImprovedPerformanceFeatureFlag {
     executionPaths: ImprovedPerformance[];
     source: Source;
 }
+export interface LoginV2FeatureFlag {
+    required: boolean;
+    baseUri?: string | undefined;
+    source: Source;
+}
+export interface LoginV2 {
+    /** Require that all users must use the new login UI. If enabled, all users will be redirected to the login V2 regardless of the application's preference. */
+    required: boolean;
+    /** Optionally specify a base uri of the login UI. If unspecified the default URI will be used. */
+    baseUri?: string | undefined;
+}
 export declare const FeatureFlag: MessageFns<FeatureFlag>;
 export declare const ImprovedPerformanceFeatureFlag: MessageFns<ImprovedPerformanceFeatureFlag>;
+export declare const LoginV2FeatureFlag: MessageFns<LoginV2FeatureFlag>;
+export declare const LoginV2: MessageFns<LoginV2>;
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {
     [K in keyof T]?: DeepPartial<T[K]>;

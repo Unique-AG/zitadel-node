@@ -82,6 +82,8 @@ export interface HumanUser {
     passwordChangeRequired: boolean;
     /** The time the user last changed their password. */
     passwordChanged: Date | undefined;
+    /** The time the user last skipped MFA initialization. */
+    mfaInitSkipped: Date | undefined;
 }
 export interface User {
     userId: string;
@@ -104,17 +106,34 @@ export interface Passkey {
     state: AuthFactorState;
     name: string;
 }
+export interface AuthFactor {
+    state: AuthFactorState;
+    otp?: AuthFactorOTP | undefined;
+    u2f?: AuthFactorU2F | undefined;
+    otpSms?: AuthFactorOTPSMS | undefined;
+    otpEmail?: AuthFactorOTPEmail | undefined;
+}
+export interface AuthFactorOTP {
+}
+export interface AuthFactorOTPSMS {
+}
+export interface AuthFactorOTPEmail {
+}
+export interface AuthFactorU2F {
+    id: string;
+    name: string;
+}
 export interface SendInviteCode {
     /**
      * Optionally set a url_template, which will be used in the invite mail sent by ZITADEL to guide the user to your invitation page.
-     * If no template is set, the default ZITADEL url will be used.
+     * If no template is set and no previous code was created, the default ZITADEL url will be used.
      *
      * The following placeholders can be used: UserID, OrgID, Code
      */
     urlTemplate?: string | undefined;
     /**
      * Optionally set an application name, which will be used in the invite mail sent by ZITADEL.
-     * If no application name is set, ZITADEL will be used as default.
+     * If no application name is set and no previous code was created, ZITADEL will be used as default.
      */
     applicationName?: string | undefined;
 }
@@ -127,6 +146,11 @@ export declare const HumanUser: MessageFns<HumanUser>;
 export declare const User: MessageFns<User>;
 export declare const MachineUser: MessageFns<MachineUser>;
 export declare const Passkey: MessageFns<Passkey>;
+export declare const AuthFactor: MessageFns<AuthFactor>;
+export declare const AuthFactorOTP: MessageFns<AuthFactorOTP>;
+export declare const AuthFactorOTPSMS: MessageFns<AuthFactorOTPSMS>;
+export declare const AuthFactorOTPEmail: MessageFns<AuthFactorOTPEmail>;
+export declare const AuthFactorU2F: MessageFns<AuthFactorU2F>;
 export declare const SendInviteCode: MessageFns<SendInviteCode>;
 export declare const ReturnInviteCode: MessageFns<ReturnInviteCode>;
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;

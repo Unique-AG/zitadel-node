@@ -1,14 +1,18 @@
 import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
 import Long from "long";
 import { type CallContext, type CallOptions } from "nice-grpc-common";
+import { PaginationRequest, PaginationResponse } from "../../filter/v2/filter.js";
+import { Metadata as Metadata1, MetadataSearchFilter } from "../../metadata/v2/metadata.js";
 import { Details, ListDetails, ListQuery, Organization } from "../../object/v2/object.js";
 import { PasskeyAuthenticator, PasskeyRegistrationCode, ReturnPasskeyRegistrationCode, SendPasskeyRegistrationLink } from "./auth.js";
 import { ReturnEmailVerificationCode, SendEmailVerificationCode, SetHumanEmail } from "./email.js";
-import { IDPInformation, IDPIntent, IDPLink, LDAPCredentials, RedirectURLs } from "./idp.js";
+import { FormData, IDPInformation, IDPIntent, IDPLink, LDAPCredentials, RedirectURLs } from "./idp.js";
+import { Key, KeyFieldName, KeysSearchFilter } from "./key.js";
 import { HashedPassword, Password, ReturnPasswordResetCode, SendPasswordResetLink, SetPassword } from "./password.js";
+import { PersonalAccessToken, PersonalAccessTokenFieldName, PersonalAccessTokensSearchFilter } from "./pat.js";
 import { ReturnPhoneVerificationCode, SendPhoneVerificationCode, SetHumanPhone } from "./phone.js";
 import { SearchQuery, UserFieldName } from "./query.js";
-import { Passkey, ReturnInviteCode, SendInviteCode, SetHumanProfile, SetMetadataEntry, User } from "./user.js";
+import { AuthFactor, AuthFactorState, Gender, Passkey, ReturnInviteCode, SendInviteCode, SetHumanProfile, SetMetadataEntry, User } from "./user.js";
 export declare const protobufPackage = "zitadel.user.v2";
 export declare enum AuthenticationMethodType {
     AUTHENTICATION_METHOD_TYPE_UNSPECIFIED = 0,
@@ -23,6 +27,15 @@ export declare enum AuthenticationMethodType {
 }
 export declare function authenticationMethodTypeFromJSON(object: any): AuthenticationMethodType;
 export declare function authenticationMethodTypeToJSON(object: AuthenticationMethodType): string;
+export declare enum AuthFactors {
+    OTP = 0,
+    OTP_SMS = 1,
+    OTP_EMAIL = 2,
+    U2F = 3,
+    UNRECOGNIZED = -1
+}
+export declare function authFactorsFromJSON(object: any): AuthFactors;
+export declare function authFactorsToJSON(object: AuthFactors): string;
 export interface AddHumanUserRequest {
     /** optionally set your own id unique for the user. */
     userId?: string | undefined;
@@ -46,6 +59,83 @@ export interface AddHumanUserResponse {
     userId: string;
     details: Details | undefined;
     emailCode?: string | undefined;
+    phoneCode?: string | undefined;
+}
+export interface CreateUserRequest {
+    /** The unique identifier of the organization the user belongs to. */
+    organizationId: string;
+    /**
+     * The ID is a unique identifier for the user in the instance.
+     * If not specified, it will be generated.
+     * You can set your own user id that is unique within the instance.
+     * This is useful in migration scenarios, for example if the user already has an ID in another Zitadel system.
+     * If not specified, it will be generated.
+     * It can't be changed after creation.
+     */
+    userId?: string | undefined;
+    /**
+     * The username is a unique identifier for the user in the organization.
+     * If not specified, Zitadel sets the username to the email for users of type human and to the user_id for users of type machine.
+     * It is used to identify the user in the organization and can be used for login.
+     */
+    username?: string | undefined;
+    /**
+     * Users of type human are users that are meant to be used by a person.
+     * They can log in interactively using a login UI.
+     * By default, new users will receive a verification email and, if a phone is configured, a verification SMS.
+     * To make sure these messages are sent, configure and activate valid SMTP and Twilio configurations.
+     * Read more about your options for controlling this behaviour in the email and phone field documentations.
+     */
+    human?: CreateUserRequest_Human | undefined;
+    /**
+     * Users of type machine are users that are meant to be used by a machine.
+     * In order to authenticate, [add a secret](apis/resources/user_service_v2/user-service-add-secret.api.mdx), [a key](apis/resources/user_service_v2/user-service-add-key.api.mdx) or [a personal access token](apis/resources/user_service_v2/user-service-add-personal-access-token.api.mdx) to the user.
+     * Tokens generated for new users of type machine will be of an opaque Bearer type.
+     * You can change the users token type to JWT by using the [management v1 service method UpdateMachine](apis/resources/mgmt/management-service-update-machine.api.mdx).
+     */
+    machine?: CreateUserRequest_Machine | undefined;
+}
+export interface CreateUserRequest_Human {
+    /** Set the users profile information. */
+    profile: SetHumanProfile | undefined;
+    /** Set the users email address and optionally send a verification email. */
+    email: SetHumanEmail | undefined;
+    /** Set the users phone number and optionally send a verification SMS. */
+    phone?: SetHumanPhone | undefined;
+    password?: Password | undefined;
+    hashedPassword?: HashedPassword | undefined;
+    /**
+     * Create the user with a list of links to identity providers.
+     * This can be useful in migration-scenarios.
+     * For example, if a user already has an account in an external identity provider or another Zitadel instance, an IDP link allows the user to authenticate as usual.
+     * Sessions, second factors, hardware keys registered externally are still available for authentication.
+     * Use the following endpoints to manage identity provider links:
+     * - [AddIDPLink](apis/resources/user_service_v2/user-service-add-idp-link.api.mdx)
+     * - [RemoveIDPLink](apis/resources/user_service_v2/user-service-remove-idp-link.api.mdx)
+     */
+    idpLinks: IDPLink[];
+    /**
+     * An Implementation of RFC 6238 is used, with HMAC-SHA-1 and time-step of 30 seconds.
+     * Currently no other options are supported, and if anything different is used the validation will fail.
+     */
+    totpSecret?: string | undefined;
+    /** Metadata to bet set. The values have to be base64 encoded. */
+    metadata: Metadata[];
+}
+export interface CreateUserRequest_Machine {
+    /** The machine users name is a human readable field that helps identifying the user. */
+    name: string;
+    /** The description is a field that helps to remember the purpose of the user. */
+    description?: string | undefined;
+}
+export interface CreateUserResponse {
+    /** The unique identifier of the newly created user. */
+    id: string;
+    /** The timestamp of the user creation. */
+    creationDate: Date | undefined;
+    /** The email verification code if it was requested by setting the email verification to return_code. */
+    emailCode?: string | undefined;
+    /** The phone verification code if it was requested by setting the phone verification to return_code. */
     phoneCode?: string | undefined;
 }
 export interface GetUserByIDRequest {
@@ -87,6 +177,16 @@ export interface ResendEmailCodeRequest {
     returnCode?: ReturnEmailVerificationCode | undefined;
 }
 export interface ResendEmailCodeResponse {
+    details: Details | undefined;
+    /** in case the verification was set to return_code, the code will be returned */
+    verificationCode?: string | undefined;
+}
+export interface SendEmailCodeRequest {
+    userId: string;
+    sendCode?: SendEmailVerificationCode | undefined;
+    returnCode?: ReturnEmailVerificationCode | undefined;
+}
+export interface SendEmailCodeResponse {
     details: Details | undefined;
     /** in case the verification was set to return_code, the code will be returned */
     verificationCode?: string | undefined;
@@ -138,6 +238,83 @@ export interface DeleteUserRequest {
 }
 export interface DeleteUserResponse {
     details: Details | undefined;
+}
+export interface UpdateUserRequest {
+    /**
+     * The user id is the users unique identifier in the instance.
+     * It can't be changed.
+     */
+    userId: string;
+    /**
+     * Set a new username that is unique within the instance.
+     * Beware that active tokens and sessions are invalidated when the username is changed.
+     */
+    username?: string | undefined;
+    human?: UpdateUserRequest_Human | undefined;
+    machine?: UpdateUserRequest_Machine | undefined;
+}
+export interface UpdateUserRequest_Human {
+    /** Change the users profile information */
+    profile?: UpdateUserRequest_Human_Profile | undefined;
+    /** Change the users email address and/or trigger a verification email */
+    email?: SetHumanEmail | undefined;
+    /**
+     * Change the users phone number and/or trigger a verification SMS
+     * To delete the users phone number, leave the phone field empty and omit the verification field.
+     */
+    phone?: SetHumanPhone | undefined;
+    /**
+     * Change the users password.
+     * You can optionally require the current password or the verification code to be correct.
+     */
+    password?: SetPassword | undefined;
+}
+export interface UpdateUserRequest_Human_Profile {
+    /**
+     * The given name is the first name of the user.
+     * For example, it can be used to personalize notifications and login UIs.
+     */
+    givenName?: string | undefined;
+    /**
+     * The family name is the last name of the user.
+     * For example, it can be used to personalize user interfaces and notifications.
+     */
+    familyName?: string | undefined;
+    /**
+     * The nick name is the users short name.
+     * For example, it can be used to personalize user interfaces and notifications.
+     */
+    nickName?: string | undefined;
+    /**
+     * The display name is how a user should primarily be displayed in lists.
+     * It can also for example be used to personalize user interfaces and notifications.
+     */
+    displayName?: string | undefined;
+    /**
+     * The users preferred language is the language that systems should use to interact with the user.
+     * It has the format of a [BCP-47 language tag](https://datatracker.ietf.org/doc/html/rfc3066).
+     * It is used by Zitadel where no higher prioritized preferred language can be used.
+     * For example, browser settings can overwrite a users preferred_language.
+     * Notification messages and standard login UIs use the users preferred language if it is supported and allowed on the instance.
+     * Else, the default language of the instance is used.
+     */
+    preferredLanguage?: string | undefined;
+    /** The users gender can for example be used to personalize user interfaces and notifications. */
+    gender?: Gender | undefined;
+}
+export interface UpdateUserRequest_Machine {
+    /** The machine users name is a human readable field that helps identifying the user. */
+    name?: string | undefined;
+    /** The description is a field that helps to remember the purpose of the user. */
+    description?: string | undefined;
+}
+export interface UpdateUserResponse {
+    /** The timestamp of the change of the user. */
+    changeDate: Date | undefined;
+    /** In case the email verification was set to return_code, the code will be returned */
+    emailCode?: string | undefined;
+    /** In case the phone verification was set to return_code, the code will be returned */
+    phoneCode?: string | undefined;
 }
 export interface UpdateHumanUserRequest {
     userId: string;
@@ -307,7 +484,13 @@ export interface StartIdentityProviderIntentResponse {
     details: Details | undefined;
     authUrl?: string | undefined;
     idpIntent?: IDPIntent | undefined;
+    /**
+     * POST call information
+     * Deprecated: Use form_data instead
+     */
     postForm?: Buffer | undefined;
+    /** Data for a form POST call */
+    formData?: FormData | undefined;
 }
 export interface RetrieveIdentityProviderIntentRequest {
     idpIntentId: string;
@@ -317,6 +500,7 @@ export interface RetrieveIdentityProviderIntentResponse {
     details: Details | undefined;
     idpInformation: IDPInformation | undefined;
     userId: string;
+    addHumanUser: AddHumanUserRequest | undefined;
 }
 export interface AddIDPLinkRequest {
     userId: string;
@@ -375,6 +559,14 @@ export interface ListAuthenticationMethodTypesResponse {
     details: ListDetails | undefined;
     authMethodTypes: AuthenticationMethodType[];
 }
+export interface ListAuthenticationFactorsRequest {
+    userId: string;
+    authFactors: AuthFactors[];
+    states: AuthFactorState[];
+}
+export interface ListAuthenticationFactorsResponse {
+    result: AuthFactor[];
+}
 export interface CreateInviteCodeRequest {
     userId: string;
     sendCode?: SendInviteCode | undefined;
@@ -398,8 +590,154 @@ export interface VerifyInviteCodeRequest {
 export interface VerifyInviteCodeResponse {
     details: Details | undefined;
 }
+export interface HumanMFAInitSkippedRequest {
+    userId: string;
+}
+export interface HumanMFAInitSkippedResponse {
+    details: Details | undefined;
+}
+export interface AddSecretRequest {
+    /** The users resource ID. */
+    userId: string;
+}
+export interface AddSecretResponse {
+    /** The timestamp of the secret creation. */
+    creationDate: Date | undefined;
+    /**
+     * The client secret.
+     * Store this secret in a secure place.
+     * It is not possible to retrieve it again.
+     */
+    clientSecret: string;
+}
+export interface RemoveSecretRequest {
+    /** The users resource ID. */
+    userId: string;
+}
+export interface RemoveSecretResponse {
+    /** The timestamp of the secret deletion. */
+    deletionDate: Date | undefined;
+}
+export interface AddKeyRequest {
+    /** The users resource ID. */
+    userId: string;
+    /** The date the key will expire and no logins will be possible anymore. */
+    expirationDate: Date | undefined;
+    /** Optionally provide a public key of your own generated RSA private key. */
+    publicKey: Buffer;
+}
+export interface AddKeyResponse {
+    /** The timestamp of the key creation. */
+    creationDate: Date | undefined;
+    /** The keys ID. */
+    keyId: string;
+    /** The key which is usable to authenticate against the API. */
+    keyContent: Buffer;
+}
+export interface RemoveKeyRequest {
+    /** The users resource ID. */
+    userId: string;
+    /** The keys ID. */
+    keyId: string;
+}
+export interface RemoveKeyResponse {
+    /** The timestamp of the key deletion. */
+    deletionDate: Date | undefined;
+}
+export interface ListKeysRequest {
+    /** List limitations and ordering. */
+    pagination?: PaginationRequest | undefined;
+    /** The field the result is sorted by. The default is the creation date. Beware that if you change this, your result pagination might be inconsistent. */
+    sortingColumn?: KeyFieldName | undefined;
+    /** Define the criteria to query for. */
+    filters: KeysSearchFilter[];
+}
+export interface ListKeysResponse {
+    pagination: PaginationResponse | undefined;
+    result: Key[];
+}
+export interface AddPersonalAccessTokenRequest {
+    /** The users resource ID. */
+    userId: string;
+    /** The timestamp when the token will expire. */
+    expirationDate: Date | undefined;
+}
+export interface AddPersonalAccessTokenResponse {
+    /** The timestamp of the personal access token creation. */
+    creationDate: Date | undefined;
+    /** The tokens ID. */
+    tokenId: string;
+    /** The personal access token that can be used to authenticate against the API */
+    token: string;
+}
+export interface RemovePersonalAccessTokenRequest {
+    /** The users resource ID. */
+    userId: string;
+    /** The tokens ID. */
+    tokenId: string;
+}
+export interface RemovePersonalAccessTokenResponse {
+    /** The timestamp of the personal access token deletion. */
+    deletionDate: Date | undefined;
+}
+export interface ListPersonalAccessTokensRequest {
+    /** List limitations and ordering. */
+    pagination?: PaginationRequest | undefined;
+    /** The field the result is sorted by. The default is the creation date. Beware that if you change this, your result pagination might be inconsistent. */
+    sortingColumn?: PersonalAccessTokenFieldName | undefined;
+    /** Define the criteria to query for. */
+    filters: PersonalAccessTokensSearchFilter[];
+}
+export interface ListPersonalAccessTokensResponse {
+    pagination: PaginationResponse | undefined;
+    result: PersonalAccessToken[];
+}
+export interface Metadata {
+    /** Key in the metadata key/value pair. */
+    key: string;
+    /** Value in the metadata key/value pair. */
+    value: Buffer;
+}
+export interface SetUserMetadataRequest {
+    /** ID of the user under which the metadata gets set. */
+    userId: string;
+    /** Metadata to bet set. The values have to be base64 encoded. */
+    metadata: Metadata[];
+}
+export interface SetUserMetadataResponse {
+    /** The timestamp of the update of the user metadata. */
+    setDate: Date | undefined;
+}
+export interface ListUserMetadataRequest {
+    /** ID of the user under which the metadata is to be listed. */
+    userId: string;
+    /** List limitations and ordering. */
+    pagination?: PaginationRequest | undefined;
+    /** Define the criteria to query for. */
+    filters: MetadataSearchFilter[];
+}
+export interface ListUserMetadataResponse {
+    /** Pagination of the users metadata results. */
+    pagination: PaginationResponse | undefined;
+    /** The user metadata requested. */
+    metadata: Metadata1[];
+}
+export interface DeleteUserMetadataRequest {
+    /** ID of the user which metadata is to be deleted is stored on. */
+    userId: string;
+    /** The keys for the user metadata to be deleted. */
+    keys: string[];
+}
+export interface DeleteUserMetadataResponse {
+    /** The timestamp of the deletion of the user metadata. */
+    deletionDate: Date | undefined;
+}
 export declare const AddHumanUserRequest: MessageFns<AddHumanUserRequest>;
 export declare const AddHumanUserResponse: MessageFns<AddHumanUserResponse>;
+export declare const CreateUserRequest: MessageFns<CreateUserRequest>;
+export declare const CreateUserRequest_Human: MessageFns<CreateUserRequest_Human>;
+export declare const CreateUserRequest_Machine: MessageFns<CreateUserRequest_Machine>;
+export declare const CreateUserResponse: MessageFns<CreateUserResponse>;
 export declare const GetUserByIDRequest: MessageFns<GetUserByIDRequest>;
 export declare const GetUserByIDResponse: MessageFns<GetUserByIDResponse>;
 export declare const ListUsersRequest: MessageFns<ListUsersRequest>;
@@ -408,6 +746,8 @@ export declare const SetEmailRequest: MessageFns<SetEmailRequest>;
 export declare const SetEmailResponse: MessageFns<SetEmailResponse>;
 export declare const ResendEmailCodeRequest: MessageFns<ResendEmailCodeRequest>;
 export declare const ResendEmailCodeResponse: MessageFns<ResendEmailCodeResponse>;
+export declare const SendEmailCodeRequest: MessageFns<SendEmailCodeRequest>;
+export declare const SendEmailCodeResponse: MessageFns<SendEmailCodeResponse>;
 export declare const VerifyEmailRequest: MessageFns<VerifyEmailRequest>;
 export declare const VerifyEmailResponse: MessageFns<VerifyEmailResponse>;
 export declare const SetPhoneRequest: MessageFns<SetPhoneRequest>;
@@ -420,6 +760,11 @@ export declare const VerifyPhoneRequest: MessageFns<VerifyPhoneRequest>;
 export declare const VerifyPhoneResponse: MessageFns<VerifyPhoneResponse>;
 export declare const DeleteUserRequest: MessageFns<DeleteUserRequest>;
 export declare const DeleteUserResponse: MessageFns<DeleteUserResponse>;
+export declare const UpdateUserRequest: MessageFns<UpdateUserRequest>;
+export declare const UpdateUserRequest_Human: MessageFns<UpdateUserRequest_Human>;
+export declare const UpdateUserRequest_Human_Profile: MessageFns<UpdateUserRequest_Human_Profile>;
+export declare const UpdateUserRequest_Machine: MessageFns<UpdateUserRequest_Machine>;
+export declare const UpdateUserResponse: MessageFns<UpdateUserResponse>;
 export declare const UpdateHumanUserRequest: MessageFns<UpdateHumanUserRequest>;
 export declare const UpdateHumanUserResponse: MessageFns<UpdateHumanUserResponse>;
 export declare const DeactivateUserRequest: MessageFns<DeactivateUserRequest>;
@@ -477,19 +822,70 @@ export declare const SetPasswordResponse: MessageFns<SetPasswordResponse>;
 export declare const ListAuthenticationMethodTypesRequest: MessageFns<ListAuthenticationMethodTypesRequest>;
 export declare const DomainQuery: MessageFns<DomainQuery>;
 export declare const ListAuthenticationMethodTypesResponse: MessageFns<ListAuthenticationMethodTypesResponse>;
+export declare const ListAuthenticationFactorsRequest: MessageFns<ListAuthenticationFactorsRequest>;
+export declare const ListAuthenticationFactorsResponse: MessageFns<ListAuthenticationFactorsResponse>;
 export declare const CreateInviteCodeRequest: MessageFns<CreateInviteCodeRequest>;
 export declare const CreateInviteCodeResponse: MessageFns<CreateInviteCodeResponse>;
 export declare const ResendInviteCodeRequest: MessageFns<ResendInviteCodeRequest>;
 export declare const ResendInviteCodeResponse: MessageFns<ResendInviteCodeResponse>;
 export declare const VerifyInviteCodeRequest: MessageFns<VerifyInviteCodeRequest>;
 export declare const VerifyInviteCodeResponse: MessageFns<VerifyInviteCodeResponse>;
+export declare const HumanMFAInitSkippedRequest: MessageFns<HumanMFAInitSkippedRequest>;
+export declare const HumanMFAInitSkippedResponse: MessageFns<HumanMFAInitSkippedResponse>;
+export declare const AddSecretRequest: MessageFns<AddSecretRequest>;
+export declare const AddSecretResponse: MessageFns<AddSecretResponse>;
+export declare const RemoveSecretRequest: MessageFns<RemoveSecretRequest>;
+export declare const RemoveSecretResponse: MessageFns<RemoveSecretResponse>;
+export declare const AddKeyRequest: MessageFns<AddKeyRequest>;
+export declare const AddKeyResponse: MessageFns<AddKeyResponse>;
+export declare const RemoveKeyRequest: MessageFns<RemoveKeyRequest>;
+export declare const RemoveKeyResponse: MessageFns<RemoveKeyResponse>;
+export declare const ListKeysRequest: MessageFns<ListKeysRequest>;
+export declare const ListKeysResponse: MessageFns<ListKeysResponse>;
+export declare const AddPersonalAccessTokenRequest: MessageFns<AddPersonalAccessTokenRequest>;
+export declare const AddPersonalAccessTokenResponse: MessageFns<AddPersonalAccessTokenResponse>;
+export declare const RemovePersonalAccessTokenRequest: MessageFns<RemovePersonalAccessTokenRequest>;
+export declare const RemovePersonalAccessTokenResponse: MessageFns<RemovePersonalAccessTokenResponse>;
+export declare const ListPersonalAccessTokensRequest: MessageFns<ListPersonalAccessTokensRequest>;
+export declare const ListPersonalAccessTokensResponse: MessageFns<ListPersonalAccessTokensResponse>;
+export declare const Metadata: MessageFns<Metadata>;
+export declare const SetUserMetadataRequest: MessageFns<SetUserMetadataRequest>;
+export declare const SetUserMetadataResponse: MessageFns<SetUserMetadataResponse>;
+export declare const ListUserMetadataRequest: MessageFns<ListUserMetadataRequest>;
+export declare const ListUserMetadataResponse: MessageFns<ListUserMetadataResponse>;
+export declare const DeleteUserMetadataRequest: MessageFns<DeleteUserMetadataRequest>;
+export declare const DeleteUserMetadataResponse: MessageFns<DeleteUserMetadataResponse>;
 export type UserServiceDefinition = typeof UserServiceDefinition;
 export declare const UserServiceDefinition: {
     readonly name: "UserService";
     readonly fullName: "zitadel.user.v2.UserService";
     readonly methods: {
         /**
+         * Create a User
+         *
+         * Create a new human or machine user in the specified organization.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly createUser: {
+            readonly name: "CreateUser";
+            readonly requestType: MessageFns<CreateUserRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<CreateUserResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
          * Create a new human user
+         *
+         * Deprecated: Use [CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) to create a new user of type human instead.
          *
          * Create/import a new user with the type human. The newly created user will get a verification email if either the email address is not marked as verified and you did not request the verification to be returned.
          */
@@ -529,7 +925,7 @@ export declare const UserServiceDefinition: {
         /**
          * Search Users
          *
-         * Search for users. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination..
+         * Search for users. By default, we will return all users of your instance that you have permission to read. Make sure to include a limit and sorting for pagination.
          */
         readonly listUsers: {
             readonly name: "ListUsers";
@@ -548,6 +944,8 @@ export declare const UserServiceDefinition: {
         /**
          * Change the user email
          *
+         * Deprecated: [Update the users email field](apis/resources/user_service_v2/user-service-update-user.api.mdx).
+         *
          * Change the email address of a user. If the state is set to not verified, a verification code will be generated, which can be either returned or sent to the user by email..
          */
         readonly setEmail: {
@@ -564,11 +962,7 @@ export declare const UserServiceDefinition: {
                 };
             };
         };
-        /**
-         * Resend code to verify user email
-         *
-         * Resend code to verify user email.
-         */
+        /** Resend code to verify user email */
         readonly resendEmailCode: {
             readonly name: "ResendEmailCode";
             readonly requestType: MessageFns<ResendEmailCodeRequest>;
@@ -583,10 +977,25 @@ export declare const UserServiceDefinition: {
                 };
             };
         };
+        /** Send code to verify user email */
+        readonly sendEmailCode: {
+            readonly name: "SendEmailCode";
+            readonly requestType: MessageFns<SendEmailCodeRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<SendEmailCodeResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
         /**
          * Verify the email
          *
-         * Verify the email with the generated code..
+         * Verify the email with the generated code.
          */
         readonly verifyEmail: {
             readonly name: "VerifyEmail";
@@ -605,6 +1014,8 @@ export declare const UserServiceDefinition: {
         /**
          * Set the user phone
          *
+         * Deprecated: [Update the users phone field](apis/resources/user_service_v2/user-service-update-user.api.mdx).
+         *
          * Set the phone number of a user. If the state is set to not verified, a verification code will be generated, which can be either returned or sent to the user by sms..
          */
         readonly setPhone: {
@@ -622,9 +1033,11 @@ export declare const UserServiceDefinition: {
             };
         };
         /**
-         * Remove the user phone
+         * Delete the user phone
          *
-         * Remove the user phone
+         * Deprecated: [Update the users phone field](apis/resources/user_service_v2/user-service-update-user.api.mdx) to remove the phone number.
+         *
+         * Delete the phone number of a user.
          */
         readonly removePhone: {
             readonly name: "RemovePhone";
@@ -641,9 +1054,9 @@ export declare const UserServiceDefinition: {
             };
         };
         /**
-         * Resend code to verify user phone
+         * Resend code to verify user phone number
          *
-         * Resend code to verify user phone.
+         * Resend code to verify user phone number.
          */
         readonly resendPhoneCode: {
             readonly name: "ResendPhoneCode";
@@ -660,9 +1073,9 @@ export declare const UserServiceDefinition: {
             };
         };
         /**
-         * Verify the phone
+         * Verify the phone number
          *
-         * Verify the phone with the generated code..
+         * Verify the phone number with the generated code.
          */
         readonly verifyPhone: {
             readonly name: "VerifyPhone";
@@ -679,9 +1092,35 @@ export declare const UserServiceDefinition: {
             };
         };
         /**
-         * Update User
+         * Update a User
          *
-         * Update all information from a user..
+         * Partially update an existing user.
+         * If you change the users email or phone, you can specify how the ownership should be verified.
+         * If you change the users password, you can specify if the password should be changed again on the users next login.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly updateUser: {
+            readonly name: "UpdateUser";
+            readonly requestType: MessageFns<UpdateUserRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<UpdateUserResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Update Human User
+         *
+         * Deprecated: Use [UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) to update a user of type human instead.
+         *
+         * Update all information from a user.
          */
         readonly updateHumanUser: {
             readonly name: "UpdateHumanUser";
@@ -757,7 +1196,7 @@ export declare const UserServiceDefinition: {
         /**
          * Unlock user
          *
-         * The state of the user will be changed to 'locked'. The user will not be able to log in anymore. The endpoint returns an error if the user is already in the state 'locked'. Use this endpoint if the user should not be able to log in temporarily because of an event that happened (wrong password, etc.)..
+         * The state of the user will be changed to 'active'. The user will be able to log in again. The endpoint returns an error if the user is not in the state 'locked'.
          */
         readonly unlockUser: {
             readonly name: "UnlockUser";
@@ -1194,6 +1633,8 @@ export declare const UserServiceDefinition: {
         /**
          * Change password
          *
+         * Deprecated: [Update the users password](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+         *
          * Change the password of a user with either a verification code or the current password..
          */
         readonly setPassword: {
@@ -1201,6 +1642,191 @@ export declare const UserServiceDefinition: {
             readonly requestType: MessageFns<SetPasswordRequest>;
             readonly requestStream: false;
             readonly responseType: MessageFns<SetPasswordResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Add a Users Secret
+         *
+         * Generates a client secret for the user.
+         * The client id is the users username.
+         * If the user already has a secret, it is overwritten.
+         * Only users of type machine can have a secret.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly addSecret: {
+            readonly name: "AddSecret";
+            readonly requestType: MessageFns<AddSecretRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<AddSecretResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Remove a Users Secret
+         *
+         * Remove the current client ID and client secret from a machine user.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly removeSecret: {
+            readonly name: "RemoveSecret";
+            readonly requestType: MessageFns<RemoveSecretRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<RemoveSecretResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Add a Key
+         *
+         * Add a keys that can be used to securely authenticate at the Zitadel APIs using JWT profile authentication using short-lived tokens.
+         * Make sure you store the returned key safely, as you won't be able to read it from the Zitadel API anymore.
+         * Only users of type machine can have keys.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly addKey: {
+            readonly name: "AddKey";
+            readonly requestType: MessageFns<AddKeyRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<AddKeyResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Remove a Key
+         *
+         * Remove a machine users key by the given key ID and an optionally given user ID.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly removeKey: {
+            readonly name: "RemoveKey";
+            readonly requestType: MessageFns<RemoveKeyRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<RemoveKeyResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Search Keys
+         *
+         * List all matching keys. By default all keys of the instance on which the caller has permission to read the owning users are returned.
+         * Make sure to include a limit and sorting for pagination.
+         *
+         * Required permission:
+         *   - user.read
+         */
+        readonly listKeys: {
+            readonly name: "ListKeys";
+            readonly requestType: MessageFns<ListKeysRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<ListKeysResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Add a Personal Access Token
+         *
+         * Personal access tokens (PAT) are the easiest way to authenticate to the Zitadel APIs.
+         * Make sure you store the returned PAT safely, as you won't be able to read it from the Zitadel API anymore.
+         * Only users of type machine can have personal access tokens.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly addPersonalAccessToken: {
+            readonly name: "AddPersonalAccessToken";
+            readonly requestType: MessageFns<AddPersonalAccessTokenRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<AddPersonalAccessTokenResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Remove a Personal Access Token
+         *
+         * Removes a machine users personal access token by the given token ID and an optionally given user ID.
+         *
+         * Required permission:
+         *   - user.write
+         */
+        readonly removePersonalAccessToken: {
+            readonly name: "RemovePersonalAccessToken";
+            readonly requestType: MessageFns<RemovePersonalAccessTokenRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<RemovePersonalAccessTokenResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Search Personal Access Tokens
+         *
+         * List all personal access tokens. By default all personal access tokens of the instance on which the caller has permission to read the owning users are returned.
+         * Make sure to include a limit and sorting for pagination.
+         *
+         * Required permission:
+         *   - user.read
+         */
+        readonly listPersonalAccessTokens: {
+            readonly name: "ListPersonalAccessTokens";
+            readonly requestType: MessageFns<ListPersonalAccessTokensRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<ListPersonalAccessTokensResponse>;
             readonly responseStream: false;
             readonly options: {
                 readonly _unknownFields: {
@@ -1229,10 +1855,27 @@ export declare const UserServiceDefinition: {
                 };
             };
         };
+        readonly listAuthenticationFactors: {
+            readonly name: "ListAuthenticationFactors";
+            readonly requestType: MessageFns<ListAuthenticationFactorsRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<ListAuthenticationFactorsResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
         /**
          * Create an invite code for a user
          *
          * Create an invite code for a user to initialize their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
+         * If an invite code has been created previously, it's url template and application name will be used as defaults for the new code.
+         * The new code will overwrite the previous one and make it invalid.
+         * Note: It is possible to reissue a new code only when the previous code has expired, or when the user provides a wrong code three or more times during verification.
          */
         readonly createInviteCode: {
             readonly name: "CreateInviteCode";
@@ -1250,6 +1893,8 @@ export declare const UserServiceDefinition: {
         };
         /**
          * Resend an invite code for a user
+         *
+         * Deprecated: Use [CreateInviteCode](apis/resources/user_service_v2/user-service-create-invite-code.api.mdx) instead.
          *
          * Resend an invite code for a user to initialize their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
          * A resend is only possible if a code has been created previously and sent to the user. If there is no code or it was directly returned, an error will be returned.
@@ -1288,11 +1933,107 @@ export declare const UserServiceDefinition: {
                 };
             };
         };
+        /**
+         * MFA Init Skipped
+         *
+         * Update the last time the user has skipped MFA initialization. The server timestamp is used.
+         */
+        readonly humanMFAInitSkipped: {
+            readonly name: "HumanMFAInitSkipped";
+            readonly requestType: MessageFns<HumanMFAInitSkippedRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<HumanMFAInitSkippedResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Set User Metadata
+         *
+         * Sets a list of key value pairs. Existing metadata entries with matching keys are overwritten. Existing metadata entries without matching keys are untouched. To remove metadata entries, use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx). For HTTP requests, make sure the bytes array value is base64 encoded.
+         *
+         * Required permission:
+         *  - `user.write`
+         */
+        readonly setUserMetadata: {
+            readonly name: "SetUserMetadata";
+            readonly requestType: MessageFns<SetUserMetadataRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<SetUserMetadataResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * List User Metadata
+         *
+         * List metadata of an user filtered by query.
+         *
+         * Required permission:
+         *  - `user.read`
+         */
+        readonly listUserMetadata: {
+            readonly name: "ListUserMetadata";
+            readonly requestType: MessageFns<ListUserMetadataRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<ListUserMetadataResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Delete User Metadata
+         *
+         * Delete metadata objects from an user with a specific key.
+         *
+         * Required permission:
+         *  - `user.write`
+         */
+        readonly deleteUserMetadata: {
+            readonly name: "DeleteUserMetadata";
+            readonly requestType: MessageFns<DeleteUserMetadataRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<DeleteUserMetadataResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
     };
 };
 export interface UserServiceImplementation<CallContextExt = {}> {
     /**
+     * Create a User
+     *
+     * Create a new human or machine user in the specified organization.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    createUser(request: CreateUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<CreateUserResponse>>;
+    /**
      * Create a new human user
+     *
+     * Deprecated: Use [CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) to create a new user of type human instead.
      *
      * Create/import a new user with the type human. The newly created user will get a verification email if either the email address is not marked as verified and you did not request the verification to be returned.
      */
@@ -1306,55 +2047,72 @@ export interface UserServiceImplementation<CallContextExt = {}> {
     /**
      * Search Users
      *
-     * Search for users. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination..
+     * Search for users. By default, we will return all users of your instance that you have permission to read. Make sure to include a limit and sorting for pagination.
      */
     listUsers(request: ListUsersRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUsersResponse>>;
     /**
      * Change the user email
      *
+     * Deprecated: [Update the users email field](apis/resources/user_service_v2/user-service-update-user.api.mdx).
+     *
      * Change the email address of a user. If the state is set to not verified, a verification code will be generated, which can be either returned or sent to the user by email..
      */
     setEmail(request: SetEmailRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetEmailResponse>>;
-    /**
-     * Resend code to verify user email
-     *
-     * Resend code to verify user email.
-     */
+    /** Resend code to verify user email */
     resendEmailCode(request: ResendEmailCodeRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ResendEmailCodeResponse>>;
+    /** Send code to verify user email */
+    sendEmailCode(request: SendEmailCodeRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SendEmailCodeResponse>>;
     /**
      * Verify the email
      *
-     * Verify the email with the generated code..
+     * Verify the email with the generated code.
      */
     verifyEmail(request: VerifyEmailRequest, context: CallContext & CallContextExt): Promise<DeepPartial<VerifyEmailResponse>>;
     /**
      * Set the user phone
      *
+     * Deprecated: [Update the users phone field](apis/resources/user_service_v2/user-service-update-user.api.mdx).
+     *
      * Set the phone number of a user. If the state is set to not verified, a verification code will be generated, which can be either returned or sent to the user by sms..
      */
     setPhone(request: SetPhoneRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetPhoneResponse>>;
     /**
-     * Remove the user phone
+     * Delete the user phone
      *
-     * Remove the user phone
+     * Deprecated: [Update the users phone field](apis/resources/user_service_v2/user-service-update-user.api.mdx) to remove the phone number.
+     *
+     * Delete the phone number of a user.
      */
     removePhone(request: RemovePhoneRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemovePhoneResponse>>;
     /**
-     * Resend code to verify user phone
+     * Resend code to verify user phone number
      *
-     * Resend code to verify user phone.
+     * Resend code to verify user phone number.
      */
     resendPhoneCode(request: ResendPhoneCodeRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ResendPhoneCodeResponse>>;
     /**
-     * Verify the phone
+     * Verify the phone number
      *
-     * Verify the phone with the generated code..
+     * Verify the phone number with the generated code.
      */
     verifyPhone(request: VerifyPhoneRequest, context: CallContext & CallContextExt): Promise<DeepPartial<VerifyPhoneResponse>>;
     /**
-     * Update User
+     * Update a User
      *
-     * Update all information from a user..
+     * Partially update an existing user.
+     * If you change the users email or phone, you can specify how the ownership should be verified.
+     * If you change the users password, you can specify if the password should be changed again on the users next login.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    updateUser(request: UpdateUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateUserResponse>>;
+    /**
+     * Update Human User
+     *
+     * Deprecated: Use [UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) to update a user of type human instead.
+     *
+     * Update all information from a user.
      */
     updateHumanUser(request: UpdateHumanUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UpdateHumanUserResponse>>;
     /**
@@ -1378,7 +2136,7 @@ export interface UserServiceImplementation<CallContextExt = {}> {
     /**
      * Unlock user
      *
-     * The state of the user will be changed to 'locked'. The user will not be able to log in anymore. The endpoint returns an error if the user is already in the state 'locked'. Use this endpoint if the user should not be able to log in temporarily because of an event that happened (wrong password, etc.)..
+     * The state of the user will be changed to 'active'. The user will be able to log in again. The endpoint returns an error if the user is not in the state 'locked'.
      */
     unlockUser(request: UnlockUserRequest, context: CallContext & CallContextExt): Promise<DeepPartial<UnlockUserResponse>>;
     /**
@@ -1516,23 +2274,112 @@ export interface UserServiceImplementation<CallContextExt = {}> {
     /**
      * Change password
      *
+     * Deprecated: [Update the users password](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
      * Change the password of a user with either a verification code or the current password..
      */
     setPassword(request: SetPasswordRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetPasswordResponse>>;
+    /**
+     * Add a Users Secret
+     *
+     * Generates a client secret for the user.
+     * The client id is the users username.
+     * If the user already has a secret, it is overwritten.
+     * Only users of type machine can have a secret.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    addSecret(request: AddSecretRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddSecretResponse>>;
+    /**
+     * Remove a Users Secret
+     *
+     * Remove the current client ID and client secret from a machine user.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    removeSecret(request: RemoveSecretRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveSecretResponse>>;
+    /**
+     * Add a Key
+     *
+     * Add a keys that can be used to securely authenticate at the Zitadel APIs using JWT profile authentication using short-lived tokens.
+     * Make sure you store the returned key safely, as you won't be able to read it from the Zitadel API anymore.
+     * Only users of type machine can have keys.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    addKey(request: AddKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddKeyResponse>>;
+    /**
+     * Remove a Key
+     *
+     * Remove a machine users key by the given key ID and an optionally given user ID.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    removeKey(request: RemoveKeyRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemoveKeyResponse>>;
+    /**
+     * Search Keys
+     *
+     * List all matching keys. By default all keys of the instance on which the caller has permission to read the owning users are returned.
+     * Make sure to include a limit and sorting for pagination.
+     *
+     * Required permission:
+     *   - user.read
+     */
+    listKeys(request: ListKeysRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListKeysResponse>>;
+    /**
+     * Add a Personal Access Token
+     *
+     * Personal access tokens (PAT) are the easiest way to authenticate to the Zitadel APIs.
+     * Make sure you store the returned PAT safely, as you won't be able to read it from the Zitadel API anymore.
+     * Only users of type machine can have personal access tokens.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    addPersonalAccessToken(request: AddPersonalAccessTokenRequest, context: CallContext & CallContextExt): Promise<DeepPartial<AddPersonalAccessTokenResponse>>;
+    /**
+     * Remove a Personal Access Token
+     *
+     * Removes a machine users personal access token by the given token ID and an optionally given user ID.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    removePersonalAccessToken(request: RemovePersonalAccessTokenRequest, context: CallContext & CallContextExt): Promise<DeepPartial<RemovePersonalAccessTokenResponse>>;
+    /**
+     * Search Personal Access Tokens
+     *
+     * List all personal access tokens. By default all personal access tokens of the instance on which the caller has permission to read the owning users are returned.
+     * Make sure to include a limit and sorting for pagination.
+     *
+     * Required permission:
+     *   - user.read
+     */
+    listPersonalAccessTokens(request: ListPersonalAccessTokensRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListPersonalAccessTokensResponse>>;
     /**
      * List all possible authentication methods of a user
      *
      * List all possible authentication methods of a user like password, passwordless, (T)OTP and more..
      */
     listAuthenticationMethodTypes(request: ListAuthenticationMethodTypesRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListAuthenticationMethodTypesResponse>>;
+    listAuthenticationFactors(request: ListAuthenticationFactorsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListAuthenticationFactorsResponse>>;
     /**
      * Create an invite code for a user
      *
      * Create an invite code for a user to initialize their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
+     * If an invite code has been created previously, it's url template and application name will be used as defaults for the new code.
+     * The new code will overwrite the previous one and make it invalid.
+     * Note: It is possible to reissue a new code only when the previous code has expired, or when the user provides a wrong code three or more times during verification.
      */
     createInviteCode(request: CreateInviteCodeRequest, context: CallContext & CallContextExt): Promise<DeepPartial<CreateInviteCodeResponse>>;
     /**
      * Resend an invite code for a user
+     *
+     * Deprecated: Use [CreateInviteCode](apis/resources/user_service_v2/user-service-create-invite-code.api.mdx) instead.
      *
      * Resend an invite code for a user to initialize their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
      * A resend is only possible if a code has been created previously and sent to the user. If there is no code or it was directly returned, an error will be returned.
@@ -1545,10 +2392,54 @@ export interface UserServiceImplementation<CallContextExt = {}> {
      * allow the user to set up their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
      */
     verifyInviteCode(request: VerifyInviteCodeRequest, context: CallContext & CallContextExt): Promise<DeepPartial<VerifyInviteCodeResponse>>;
+    /**
+     * MFA Init Skipped
+     *
+     * Update the last time the user has skipped MFA initialization. The server timestamp is used.
+     */
+    humanMFAInitSkipped(request: HumanMFAInitSkippedRequest, context: CallContext & CallContextExt): Promise<DeepPartial<HumanMFAInitSkippedResponse>>;
+    /**
+     * Set User Metadata
+     *
+     * Sets a list of key value pairs. Existing metadata entries with matching keys are overwritten. Existing metadata entries without matching keys are untouched. To remove metadata entries, use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx). For HTTP requests, make sure the bytes array value is base64 encoded.
+     *
+     * Required permission:
+     *  - `user.write`
+     */
+    setUserMetadata(request: SetUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetUserMetadataResponse>>;
+    /**
+     * List User Metadata
+     *
+     * List metadata of an user filtered by query.
+     *
+     * Required permission:
+     *  - `user.read`
+     */
+    listUserMetadata(request: ListUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<ListUserMetadataResponse>>;
+    /**
+     * Delete User Metadata
+     *
+     * Delete metadata objects from an user with a specific key.
+     *
+     * Required permission:
+     *  - `user.write`
+     */
+    deleteUserMetadata(request: DeleteUserMetadataRequest, context: CallContext & CallContextExt): Promise<DeepPartial<DeleteUserMetadataResponse>>;
 }
 export interface UserServiceClient<CallOptionsExt = {}> {
     /**
+     * Create a User
+     *
+     * Create a new human or machine user in the specified organization.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    createUser(request: DeepPartial<CreateUserRequest>, options?: CallOptions & CallOptionsExt): Promise<CreateUserResponse>;
+    /**
      * Create a new human user
+     *
+     * Deprecated: Use [CreateUser](apis/resources/user_service_v2/user-service-create-user.api.mdx) to create a new user of type human instead.
      *
      * Create/import a new user with the type human. The newly created user will get a verification email if either the email address is not marked as verified and you did not request the verification to be returned.
      */
@@ -1562,55 +2453,72 @@ export interface UserServiceClient<CallOptionsExt = {}> {
     /**
      * Search Users
      *
-     * Search for users. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination..
+     * Search for users. By default, we will return all users of your instance that you have permission to read. Make sure to include a limit and sorting for pagination.
      */
     listUsers(request: DeepPartial<ListUsersRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUsersResponse>;
     /**
      * Change the user email
      *
+     * Deprecated: [Update the users email field](apis/resources/user_service_v2/user-service-update-user.api.mdx).
+     *
      * Change the email address of a user. If the state is set to not verified, a verification code will be generated, which can be either returned or sent to the user by email..
      */
     setEmail(request: DeepPartial<SetEmailRequest>, options?: CallOptions & CallOptionsExt): Promise<SetEmailResponse>;
-    /**
-     * Resend code to verify user email
-     *
-     * Resend code to verify user email.
-     */
+    /** Resend code to verify user email */
     resendEmailCode(request: DeepPartial<ResendEmailCodeRequest>, options?: CallOptions & CallOptionsExt): Promise<ResendEmailCodeResponse>;
+    /** Send code to verify user email */
+    sendEmailCode(request: DeepPartial<SendEmailCodeRequest>, options?: CallOptions & CallOptionsExt): Promise<SendEmailCodeResponse>;
     /**
      * Verify the email
      *
-     * Verify the email with the generated code..
+     * Verify the email with the generated code.
      */
     verifyEmail(request: DeepPartial<VerifyEmailRequest>, options?: CallOptions & CallOptionsExt): Promise<VerifyEmailResponse>;
     /**
      * Set the user phone
      *
+     * Deprecated: [Update the users phone field](apis/resources/user_service_v2/user-service-update-user.api.mdx).
+     *
      * Set the phone number of a user. If the state is set to not verified, a verification code will be generated, which can be either returned or sent to the user by sms..
      */
     setPhone(request: DeepPartial<SetPhoneRequest>, options?: CallOptions & CallOptionsExt): Promise<SetPhoneResponse>;
     /**
-     * Remove the user phone
+     * Delete the user phone
      *
-     * Remove the user phone
+     * Deprecated: [Update the users phone field](apis/resources/user_service_v2/user-service-update-user.api.mdx) to remove the phone number.
+     *
+     * Delete the phone number of a user.
      */
     removePhone(request: DeepPartial<RemovePhoneRequest>, options?: CallOptions & CallOptionsExt): Promise<RemovePhoneResponse>;
     /**
-     * Resend code to verify user phone
+     * Resend code to verify user phone number
      *
-     * Resend code to verify user phone.
+     * Resend code to verify user phone number.
      */
     resendPhoneCode(request: DeepPartial<ResendPhoneCodeRequest>, options?: CallOptions & CallOptionsExt): Promise<ResendPhoneCodeResponse>;
     /**
-     * Verify the phone
+     * Verify the phone number
      *
-     * Verify the phone with the generated code..
+     * Verify the phone number with the generated code.
      */
     verifyPhone(request: DeepPartial<VerifyPhoneRequest>, options?: CallOptions & CallOptionsExt): Promise<VerifyPhoneResponse>;
     /**
-     * Update User
+     * Update a User
      *
-     * Update all information from a user..
+     * Partially update an existing user.
+     * If you change the users email or phone, you can specify how the ownership should be verified.
+     * If you change the users password, you can specify if the password should be changed again on the users next login.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    updateUser(request: DeepPartial<UpdateUserRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateUserResponse>;
+    /**
+     * Update Human User
+     *
+     * Deprecated: Use [UpdateUser](apis/resources/user_service_v2/user-service-update-user.api.mdx) to update a user of type human instead.
+     *
+     * Update all information from a user.
      */
     updateHumanUser(request: DeepPartial<UpdateHumanUserRequest>, options?: CallOptions & CallOptionsExt): Promise<UpdateHumanUserResponse>;
     /**
@@ -1634,7 +2542,7 @@ export interface UserServiceClient<CallOptionsExt = {}> {
     /**
      * Unlock user
      *
-     * The state of the user will be changed to 'locked'. The user will not be able to log in anymore. The endpoint returns an error if the user is already in the state 'locked'. Use this endpoint if the user should not be able to log in temporarily because of an event that happened (wrong password, etc.)..
+     * The state of the user will be changed to 'active'. The user will be able to log in again. The endpoint returns an error if the user is not in the state 'locked'.
      */
     unlockUser(request: DeepPartial<UnlockUserRequest>, options?: CallOptions & CallOptionsExt): Promise<UnlockUserResponse>;
     /**
@@ -1772,23 +2680,112 @@ export interface UserServiceClient<CallOptionsExt = {}> {
     /**
      * Change password
      *
+     * Deprecated: [Update the users password](apis/resources/user_service_v2/user-service-update-user.api.mdx) instead.
+     *
      * Change the password of a user with either a verification code or the current password..
      */
     setPassword(request: DeepPartial<SetPasswordRequest>, options?: CallOptions & CallOptionsExt): Promise<SetPasswordResponse>;
+    /**
+     * Add a Users Secret
+     *
+     * Generates a client secret for the user.
+     * The client id is the users username.
+     * If the user already has a secret, it is overwritten.
+     * Only users of type machine can have a secret.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    addSecret(request: DeepPartial<AddSecretRequest>, options?: CallOptions & CallOptionsExt): Promise<AddSecretResponse>;
+    /**
+     * Remove a Users Secret
+     *
+     * Remove the current client ID and client secret from a machine user.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    removeSecret(request: DeepPartial<RemoveSecretRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveSecretResponse>;
+    /**
+     * Add a Key
+     *
+     * Add a keys that can be used to securely authenticate at the Zitadel APIs using JWT profile authentication using short-lived tokens.
+     * Make sure you store the returned key safely, as you won't be able to read it from the Zitadel API anymore.
+     * Only users of type machine can have keys.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    addKey(request: DeepPartial<AddKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<AddKeyResponse>;
+    /**
+     * Remove a Key
+     *
+     * Remove a machine users key by the given key ID and an optionally given user ID.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    removeKey(request: DeepPartial<RemoveKeyRequest>, options?: CallOptions & CallOptionsExt): Promise<RemoveKeyResponse>;
+    /**
+     * Search Keys
+     *
+     * List all matching keys. By default all keys of the instance on which the caller has permission to read the owning users are returned.
+     * Make sure to include a limit and sorting for pagination.
+     *
+     * Required permission:
+     *   - user.read
+     */
+    listKeys(request: DeepPartial<ListKeysRequest>, options?: CallOptions & CallOptionsExt): Promise<ListKeysResponse>;
+    /**
+     * Add a Personal Access Token
+     *
+     * Personal access tokens (PAT) are the easiest way to authenticate to the Zitadel APIs.
+     * Make sure you store the returned PAT safely, as you won't be able to read it from the Zitadel API anymore.
+     * Only users of type machine can have personal access tokens.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    addPersonalAccessToken(request: DeepPartial<AddPersonalAccessTokenRequest>, options?: CallOptions & CallOptionsExt): Promise<AddPersonalAccessTokenResponse>;
+    /**
+     * Remove a Personal Access Token
+     *
+     * Removes a machine users personal access token by the given token ID and an optionally given user ID.
+     *
+     * Required permission:
+     *   - user.write
+     */
+    removePersonalAccessToken(request: DeepPartial<RemovePersonalAccessTokenRequest>, options?: CallOptions & CallOptionsExt): Promise<RemovePersonalAccessTokenResponse>;
+    /**
+     * Search Personal Access Tokens
+     *
+     * List all personal access tokens. By default all personal access tokens of the instance on which the caller has permission to read the owning users are returned.
+     * Make sure to include a limit and sorting for pagination.
+     *
+     * Required permission:
+     *   - user.read
+     */
+    listPersonalAccessTokens(request: DeepPartial<ListPersonalAccessTokensRequest>, options?: CallOptions & CallOptionsExt): Promise<ListPersonalAccessTokensResponse>;
     /**
      * List all possible authentication methods of a user
      *
      * List all possible authentication methods of a user like password, passwordless, (T)OTP and more..
      */
     listAuthenticationMethodTypes(request: DeepPartial<ListAuthenticationMethodTypesRequest>, options?: CallOptions & CallOptionsExt): Promise<ListAuthenticationMethodTypesResponse>;
+    listAuthenticationFactors(request: DeepPartial<ListAuthenticationFactorsRequest>, options?: CallOptions & CallOptionsExt): Promise<ListAuthenticationFactorsResponse>;
     /**
      * Create an invite code for a user
      *
      * Create an invite code for a user to initialize their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
+     * If an invite code has been created previously, it's url template and application name will be used as defaults for the new code.
+     * The new code will overwrite the previous one and make it invalid.
+     * Note: It is possible to reissue a new code only when the previous code has expired, or when the user provides a wrong code three or more times during verification.
      */
     createInviteCode(request: DeepPartial<CreateInviteCodeRequest>, options?: CallOptions & CallOptionsExt): Promise<CreateInviteCodeResponse>;
     /**
      * Resend an invite code for a user
+     *
+     * Deprecated: Use [CreateInviteCode](apis/resources/user_service_v2/user-service-create-invite-code.api.mdx) instead.
      *
      * Resend an invite code for a user to initialize their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
      * A resend is only possible if a code has been created previously and sent to the user. If there is no code or it was directly returned, an error will be returned.
@@ -1801,6 +2798,39 @@ export interface UserServiceClient<CallOptionsExt = {}> {
      * allow the user to set up their first authentication method (password, passkeys, IdP) depending on the organization's available methods.
      */
     verifyInviteCode(request: DeepPartial<VerifyInviteCodeRequest>, options?: CallOptions & CallOptionsExt): Promise<VerifyInviteCodeResponse>;
+    /**
+     * MFA Init Skipped
+     *
+     * Update the last time the user has skipped MFA initialization. The server timestamp is used.
+     */
+    humanMFAInitSkipped(request: DeepPartial<HumanMFAInitSkippedRequest>, options?: CallOptions & CallOptionsExt): Promise<HumanMFAInitSkippedResponse>;
+    /**
+     * Set User Metadata
+     *
+     * Sets a list of key value pairs. Existing metadata entries with matching keys are overwritten. Existing metadata entries without matching keys are untouched. To remove metadata entries, use [DeleteUserMetadata](apis/resources/user_service_v2/user-service-delete-user-metadata.api.mdx). For HTTP requests, make sure the bytes array value is base64 encoded.
+     *
+     * Required permission:
+     *  - `user.write`
+     */
+    setUserMetadata(request: DeepPartial<SetUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<SetUserMetadataResponse>;
+    /**
+     * List User Metadata
+     *
+     * List metadata of an user filtered by query.
+     *
+     * Required permission:
+     *  - `user.read`
+     */
+    listUserMetadata(request: DeepPartial<ListUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<ListUserMetadataResponse>;
+    /**
+     * Delete User Metadata
+     *
+     * Delete metadata objects from an user with a specific key.
+     *
+     * Required permission:
+     *  - `user.write`
+     */
+    deleteUserMetadata(request: DeepPartial<DeleteUserMetadataRequest>, options?: CallOptions & CallOptionsExt): Promise<DeleteUserMetadataResponse>;
 }
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {

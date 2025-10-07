@@ -61,6 +61,10 @@ export interface GetLockoutSettingsResponse {
 }
 export interface GetActiveIdentityProvidersRequest {
     ctx: RequestContext | undefined;
+    creationAllowed?: boolean | undefined;
+    linkingAllowed?: boolean | undefined;
+    autoCreation?: boolean | undefined;
+    autoLinking?: boolean | undefined;
 }
 export interface GetActiveIdentityProvidersResponse {
     details: ListDetails | undefined;
@@ -87,6 +91,33 @@ export interface SetSecuritySettingsRequest {
 export interface SetSecuritySettingsResponse {
     details: Details | undefined;
 }
+export interface GetHostedLoginTranslationRequest {
+    system?: boolean | undefined;
+    instance?: boolean | undefined;
+    organizationId?: string | undefined;
+    locale: string;
+    /** if set to true, higher levels are ignored, if false higher levels are merged into the file */
+    ignoreInheritance: boolean;
+}
+export interface GetHostedLoginTranslationResponse {
+    /** hash of the payload */
+    etag: string;
+    translations: {
+        [key: string]: any;
+    } | undefined;
+}
+export interface SetHostedLoginTranslationRequest {
+    instance?: boolean | undefined;
+    organizationId?: string | undefined;
+    locale: string;
+    translations: {
+        [key: string]: any;
+    } | undefined;
+}
+export interface SetHostedLoginTranslationResponse {
+    /** hash of the saved translation. Valid only when ignore_inheritance = true */
+    etag: string;
+}
 export declare const GetLoginSettingsRequest: MessageFns<GetLoginSettingsRequest>;
 export declare const GetLoginSettingsResponse: MessageFns<GetLoginSettingsResponse>;
 export declare const GetPasswordComplexitySettingsRequest: MessageFns<GetPasswordComplexitySettingsRequest>;
@@ -109,6 +140,10 @@ export declare const GetSecuritySettingsRequest: MessageFns<GetSecuritySettingsR
 export declare const GetSecuritySettingsResponse: MessageFns<GetSecuritySettingsResponse>;
 export declare const SetSecuritySettingsRequest: MessageFns<SetSecuritySettingsRequest>;
 export declare const SetSecuritySettingsResponse: MessageFns<SetSecuritySettingsResponse>;
+export declare const GetHostedLoginTranslationRequest: MessageFns<GetHostedLoginTranslationRequest>;
+export declare const GetHostedLoginTranslationResponse: MessageFns<GetHostedLoginTranslationResponse>;
+export declare const SetHostedLoginTranslationRequest: MessageFns<SetHostedLoginTranslationRequest>;
+export declare const SetHostedLoginTranslationResponse: MessageFns<SetHostedLoginTranslationResponse>;
 export type SettingsServiceDefinition = typeof SettingsServiceDefinition;
 export declare const SettingsServiceDefinition: {
     readonly name: "SettingsService";
@@ -279,6 +314,58 @@ export declare const SettingsServiceDefinition: {
                 };
             };
         };
+        /**
+         * Get Hosted Login Translation
+         *
+         * Returns the translations in the requested locale for the hosted login.
+         * The translations returned are based on the input level specified (system, instance or organization).
+         *
+         * If the requested level doesn't contain all translations, and ignore_inheritance is set to false,
+         * a merging process fallbacks onto the higher levels ensuring all keys in the file have a translation,
+         * which could be in the default language if the one of the locale is missing on all levels.
+         *
+         * The etag returned in the response represents the hash of the translations as they are stored on DB
+         * and its reliable only if ignore_inheritance = true.
+         *
+         * Required permissions:
+         *   - `iam.policy.read`
+         */
+        readonly getHostedLoginTranslation: {
+            readonly name: "GetHostedLoginTranslation";
+            readonly requestType: MessageFns<GetHostedLoginTranslationRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<GetHostedLoginTranslationResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
+        /**
+         * Set Hosted Login Translation
+         *
+         * Sets the input translations at the specified level (instance or organization) for the input language.
+         *
+         * Required permissions:
+         *   - `iam.policy.write`
+         */
+        readonly setHostedLoginTranslation: {
+            readonly name: "SetHostedLoginTranslation";
+            readonly requestType: MessageFns<SetHostedLoginTranslationRequest>;
+            readonly requestStream: false;
+            readonly responseType: MessageFns<SetHostedLoginTranslationResponse>;
+            readonly responseStream: false;
+            readonly options: {
+                readonly _unknownFields: {
+                    readonly 8338: readonly [Buffer];
+                    readonly 400010: readonly [Buffer];
+                    readonly 578365826: readonly [Buffer];
+                };
+            };
+        };
     };
 };
 export interface SettingsServiceImplementation<CallContextExt = {}> {
@@ -304,6 +391,32 @@ export interface SettingsServiceImplementation<CallContextExt = {}> {
     getSecuritySettings(request: GetSecuritySettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetSecuritySettingsResponse>>;
     /** Set the security settings */
     setSecuritySettings(request: SetSecuritySettingsRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetSecuritySettingsResponse>>;
+    /**
+     * Get Hosted Login Translation
+     *
+     * Returns the translations in the requested locale for the hosted login.
+     * The translations returned are based on the input level specified (system, instance or organization).
+     *
+     * If the requested level doesn't contain all translations, and ignore_inheritance is set to false,
+     * a merging process fallbacks onto the higher levels ensuring all keys in the file have a translation,
+     * which could be in the default language if the one of the locale is missing on all levels.
+     *
+     * The etag returned in the response represents the hash of the translations as they are stored on DB
+     * and its reliable only if ignore_inheritance = true.
+     *
+     * Required permissions:
+     *   - `iam.policy.read`
+     */
+    getHostedLoginTranslation(request: GetHostedLoginTranslationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<GetHostedLoginTranslationResponse>>;
+    /**
+     * Set Hosted Login Translation
+     *
+     * Sets the input translations at the specified level (instance or organization) for the input language.
+     *
+     * Required permissions:
+     *   - `iam.policy.write`
+     */
+    setHostedLoginTranslation(request: SetHostedLoginTranslationRequest, context: CallContext & CallContextExt): Promise<DeepPartial<SetHostedLoginTranslationResponse>>;
 }
 export interface SettingsServiceClient<CallOptionsExt = {}> {
     /** Get basic information over the instance */
@@ -328,6 +441,32 @@ export interface SettingsServiceClient<CallOptionsExt = {}> {
     getSecuritySettings(request: DeepPartial<GetSecuritySettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<GetSecuritySettingsResponse>;
     /** Set the security settings */
     setSecuritySettings(request: DeepPartial<SetSecuritySettingsRequest>, options?: CallOptions & CallOptionsExt): Promise<SetSecuritySettingsResponse>;
+    /**
+     * Get Hosted Login Translation
+     *
+     * Returns the translations in the requested locale for the hosted login.
+     * The translations returned are based on the input level specified (system, instance or organization).
+     *
+     * If the requested level doesn't contain all translations, and ignore_inheritance is set to false,
+     * a merging process fallbacks onto the higher levels ensuring all keys in the file have a translation,
+     * which could be in the default language if the one of the locale is missing on all levels.
+     *
+     * The etag returned in the response represents the hash of the translations as they are stored on DB
+     * and its reliable only if ignore_inheritance = true.
+     *
+     * Required permissions:
+     *   - `iam.policy.read`
+     */
+    getHostedLoginTranslation(request: DeepPartial<GetHostedLoginTranslationRequest>, options?: CallOptions & CallOptionsExt): Promise<GetHostedLoginTranslationResponse>;
+    /**
+     * Set Hosted Login Translation
+     *
+     * Sets the input translations at the specified level (instance or organization) for the input language.
+     *
+     * Required permissions:
+     *   - `iam.policy.write`
+     */
+    setHostedLoginTranslation(request: DeepPartial<SetHostedLoginTranslationRequest>, options?: CallOptions & CallOptionsExt): Promise<SetHostedLoginTranslationResponse>;
 }
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 export type DeepPartial<T> = T extends Builtin ? T : T extends Long ? string | number | Long : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>> : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>> : T extends {} ? {

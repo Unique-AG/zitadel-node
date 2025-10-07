@@ -4,7 +4,7 @@ import { type CallContext, type CallOptions } from "nice-grpc-common";
 import { Details, ListDetails, ListQuery, Organization } from "../../object/v2beta/object.js";
 import { PasskeyAuthenticator, PasskeyRegistrationCode, ReturnPasskeyRegistrationCode, SendPasskeyRegistrationLink } from "./auth.js";
 import { ReturnEmailVerificationCode, SendEmailVerificationCode, SetHumanEmail } from "./email.js";
-import { IDPInformation, IDPIntent, IDPLink, LDAPCredentials, RedirectURLs } from "./idp.js";
+import { FormData, IDPInformation, IDPIntent, IDPLink, LDAPCredentials, RedirectURLs } from "./idp.js";
 import { HashedPassword, Password, ReturnPasswordResetCode, SendPasswordResetLink, SetPassword } from "./password.js";
 import { ReturnPhoneVerificationCode, SendPhoneVerificationCode, SetHumanPhone } from "./phone.js";
 import { SearchQuery, UserFieldName } from "./query.js";
@@ -284,9 +284,17 @@ export interface StartIdentityProviderIntentRequest {
 }
 export interface StartIdentityProviderIntentResponse {
     details: Details | undefined;
+    /** URL to which the client should redirect */
     authUrl?: string | undefined;
+    /** IDP Intent information */
     idpIntent?: IDPIntent | undefined;
+    /**
+     * POST call information
+     * Deprecated: Use form_data instead
+     */
     postForm?: Buffer | undefined;
+    /** Data for a form POST call */
+    formData?: FormData | undefined;
 }
 export interface RetrieveIdentityProviderIntentRequest {
     idpIntentId: string;
@@ -398,6 +406,7 @@ export declare const SetPasswordRequest: MessageFns<SetPasswordRequest>;
 export declare const SetPasswordResponse: MessageFns<SetPasswordResponse>;
 export declare const ListAuthenticationMethodTypesRequest: MessageFns<ListAuthenticationMethodTypesRequest>;
 export declare const ListAuthenticationMethodTypesResponse: MessageFns<ListAuthenticationMethodTypesResponse>;
+/** Deprecated: use user service v2 instead. This service will be removed in the next major version of ZITADEL. */
 export type UserServiceDefinition = typeof UserServiceDefinition;
 export declare const UserServiceDefinition: {
     readonly name: "UserService";
@@ -448,7 +457,7 @@ export declare const UserServiceDefinition: {
         /**
          * Search Users
          *
-         * Search for users. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination.
+         * Search for users. By default, we will return all users of your instance that you have permission to read. Make sure to include a limit and sorting for pagination.
          *
          * Deprecated: please move to the corresponding endpoint under user service v2 (GA).
          */
@@ -1139,7 +1148,7 @@ export interface UserServiceImplementation<CallContextExt = {}> {
     /**
      * Search Users
      *
-     * Search for users. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination.
+     * Search for users. By default, we will return all users of your instance that you have permission to read. Make sure to include a limit and sorting for pagination.
      *
      * Deprecated: please move to the corresponding endpoint under user service v2 (GA).
      */
@@ -1413,7 +1422,7 @@ export interface UserServiceClient<CallOptionsExt = {}> {
     /**
      * Search Users
      *
-     * Search for users. By default, we will return users of your organization. Make sure to include a limit and sorting for pagination.
+     * Search for users. By default, we will return all users of your instance that you have permission to read. Make sure to include a limit and sorting for pagination.
      *
      * Deprecated: please move to the corresponding endpoint under user service v2 (GA).
      */
